@@ -11,7 +11,7 @@ st.markdown(
     """
     <style>
     .stApp {
-        background-image: url("polimeros.png");
+        background-image: url("./polimeros.png");
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
