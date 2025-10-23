@@ -11,7 +11,7 @@ creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
 # Abrir a planilha
-sheet = client.open("vota-o-phayton@firm-mariner-397622.iam.gserviceaccount.com")
+sheet = client.open("votacao_candidatos")  # Nome exato da planilha no Google Sheets
 candidatos_sheet = sheet.worksheet("Candidatos")
 votos_sheet = sheet.worksheet("Votos")
 
@@ -40,4 +40,10 @@ if st.button("Votar"):
 
 # Mostrar resultados
 st.subheader("📊 Resultados parciais")
-st.dataframe(df_votos)
+votos = votos_sheet.get_all_records()
+df_votos = pd.DataFrame(votos)
+
+if not df_votos.empty:
+    st.dataframe(df_votos)
+else:
+    st.write("Nenhum voto registrado ainda.")
