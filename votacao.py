@@ -10,7 +10,7 @@ st.markdown(
     """
     <style>
     .stApp {
-        background-image: url("polímeros.png");
+        background-image: ("polímeros.png");
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -27,10 +27,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
-
-# ======== LOGO ========
-st.image("Captura de tela 2025-10-23 091552-Photoroom.png", width= 170)
 
 # ======== TÍTULO ========
 
