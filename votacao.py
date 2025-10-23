@@ -10,8 +10,8 @@ creds_dict = secrets["google"]
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
-# Abrir a planilha
-sheet = client.open("vota-o-phayton@firm-mariner-397622.iam.gserviceaccount.com")  # Nome exato da planilha
+# Abrir a planilha (mantendo o nome que você indicou)
+sheet = client.open("vota-o-phayton@firm-mariner-397622.iam.gserviceaccount.com")
 candidatos_sheet = sheet.worksheet("Candidatos")
 votos_sheet = sheet.worksheet("Votos")
 
@@ -20,28 +20,33 @@ candidatos = candidatos_sheet.col_values(1)
 
 st.title("🗳️ Sistema de Votação Online")
 
+# Carregar votos existentes
+votos = votos_sheet.get_all_records()
+if votos:
+    df_votos = pd.DataFrame(votos)
+else:
+    df_votos = pd.DataFrame(columns=["Candidato", "Quantidade"])
+
 # Formulário de votação
-escolha = st.radio("Escolha seu candidatos:", candidatos)
+escolha = st.radio("Escolha seu candidato:", candidatos)
 
 if st.button("Votar"):
-    votos = votos_sheet.get_all_records()
-    df_votos = pd.DataFrame(votos)
+    if "Candidato" not in df_votos.columns:
+        df_votos = pd.DataFrame(columns=["Candidatos", "Quantidade"])
 
     if escolha in df_votos["Candidatos"].values:
         idx = df_votos[df_votos["Candidatos"] == escolha].index[0]
-        df_votos.at[idx, "Quantidade"] += 1
+        df_votos.at[idx, "Quantidade"] = int(df_votos.at[idx, "Quantidade"]) + 1
     else:
-        df_votos = df_votos.append({"Candidatos": escolha, "Quantidade": 1}, ignore_index=True)
+        df_votos = pd.concat([df_votos, pd.DataFrame([{"Candidato": escolha, "Quantidade": 1}])], ignore_index=True)
 
+    # Atualizar planilha
     votos_sheet.clear()
     votos_sheet.update([df_votos.columns.values.tolist()] + df_votos.values.tolist())
 
     st.success("✅ Voto registrado com sucesso!")
 
-# Mostrar resultados (carregar sempre)
-votos = votos_sheet.get_all_records()
-df_votos = pd.DataFrame(votos)
-
+# Mostrar resultados
 st.subheader("📊 Resultados parciais")
 if not df_votos.empty:
     st.dataframe(df_votos)
