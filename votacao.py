@@ -4,13 +4,28 @@ from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 from streamlit import secrets
 
-# Autenticação com Google Sheets usando Secrets
+# ======== ESTILO VISUAL ========
+st.markdown("<h1 style='text-align: center; color: orange;'>🗳️ Sistema de Votação</h1>", unsafe_allow_html=True)
+st.markdown("""
+    <style>
+    div.stButton > button:first-child {
+        background-color: #FF6600;
+        color: white;
+        font-size: 18px;
+        border-radius: 8px;
+        height: 50px;
+        width: 200px;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# ======== AUTENTICAÇÃO GOOGLE SHEETS ========
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds_dict = secrets["google"]
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
-# Abrir a planilha (mantendo o nome que você indicou)
+# Nome da planilha (o mesmo que você indicou)
 sheet = client.open("vota-o-phayton@firm-mariner-397622.iam.gserviceaccount.com")
 candidatos_sheet = sheet.worksheet("Candidatos")
 votos_sheet = sheet.worksheet("Votos")
@@ -18,37 +33,41 @@ votos_sheet = sheet.worksheet("Votos")
 # Ler candidatos
 candidatos = candidatos_sheet.col_values(1)
 
-st.title("🗳️ Sistema de Votação Online")
-
 # Carregar votos existentes
 votos = votos_sheet.get_all_records()
 if votos:
     df_votos = pd.DataFrame(votos)
 else:
-    df_votos = pd.DataFrame(columns=["Candidato", "Quantidade"])
+    df_votos = pd.DataFrame(columns=["Matricula", "Candidato"])
 
-# Formulário de votação
+# ======== FORMULÁRIO ========
+matricula = st.text_input("Digite sua matrícula:")
 escolha = st.radio("Escolha seu candidato:", candidatos)
 
 if st.button("Votar"):
-    if "Candidato" not in df_votos.columns:
-        df_votos = pd.DataFrame(columns=["Candidato", "Quantidade"])
-
-    if escolha in df_votos["Candidato"].values:
-        idx = df_votos[df_votos["Candidato"] == escolha].index[0]
-        df_votos.at[idx, "Quantidade"] = int(df_votos.at[idx, "Quantidade"]) + 1
+    if not matricula.strip():
+        st.error("Por favor, informe sua matrícula.")
     else:
-        df_votos = pd.concat([df_votos, pd.DataFrame([{"Candidato": escolha, "Quantidade": 1}])], ignore_index=True)
+        # Verifica se já votou
+        if "Matricula" in df_votos.columns and matricula in df_votos["Matricula"].values:
+            st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
+        else:
+            # Adiciona voto
+            novo_voto = pd.DataFrame([{"Matricula": matricula, "Candidato": escolha}])
+            df_votos = pd.concat([df_votos, novo_voto], ignore_index=True)
 
-    # Atualizar planilha
-    votos_sheet.clear()
-    votos_sheet.update([df_votos.columns.values.tolist()] + df_votos.values.tolist())
+            # Atualiza planilha
+            votos_sheet.clear()
+            votos_sheet.update([df_votos.columns.values.tolist()] + df_votos.values.tolist())
 
-    st.success("✅ Voto registrado com sucesso!")
+            st.success("✅ Voto registrado com sucesso!")
 
-# Mostrar resultados
+# ======== RESULTADOS ========
 st.subheader("📊 Resultados parciais")
 if not df_votos.empty:
-    st.dataframe(df_votos)
+    # Contagem por candidato
+    contagem = df_votos["Candidato"].value_counts().reset_index()
+    contagem.columns = ["Candidato", "Votos"]
+    st.dataframe(contagem)
 else:
     st.write("Nenhum voto registrado ainda.")
