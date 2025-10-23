@@ -69,13 +69,3 @@ if st.button("Votar"):
             except Exception as e:
                 st.error(f"Erro ao registrar voto: {e}")
 
-# ======== RESULTADOS ========
-st.subheader("📊 Resultados parciais")
-votos = votos_sheet.get_all_records()
-if votos:
-    df_votos = pd.DataFrame(votos)
-    contagem = df_votos["Candidato"].value_counts().reset_index()
-    contagem.columns = ["Candidato", "Votos"]
-    st.dataframe(contagem)
-else:
-    st.write("Nenhum voto registrado ainda.")
