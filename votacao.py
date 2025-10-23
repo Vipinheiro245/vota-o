@@ -5,9 +5,11 @@ import pandas as pd
 from streamlit import secrets
 
 # ======== ESTILO VISUAL ========
-st.markdown("<h1 style='text-align: center; color: orange;'>🗳️ Sistema de Votação</h1>", unsafe_allow_html=True)
 st.markdown("""
     <style>
+    body {
+        background-color: #999999;
+    }
     div.stButton > button:first-child {
         background-color: #FF6600;
         color: white;
@@ -18,6 +20,8 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
+
+st.markdown("<h1 style='text-align: center; color: orange;'>🗳️ Sistema de Votação</h1>", unsafe_allow_html=True)
 
 # ======== AUTENTICAÇÃO GOOGLE SHEETS ========
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -41,16 +45,15 @@ if st.button("Votar"):
     if not matricula.strip():
         st.error("Por favor, informe sua matrícula.")
     else:
-        # 🔄 Recarregar votos atuais da planilha para garantir dados atualizados
+        # Recarregar votos atuais
         votos = votos_sheet.get_all_records()
         df_votos = pd.DataFrame(votos) if votos else pd.DataFrame(columns=["Matricula", "Candidato"])
 
-        # ✅ Verifica se já votou
+        # Verifica se já votou
         if matricula in df_votos["Matricula"].astype(str).values:
             st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
         else:
             try:
-                # Adiciona apenas o novo voto sem apagar tudo
                 votos_sheet.append_row([matricula, escolha])
                 st.success(f"✅ Voto registrado com sucesso para {escolha}!")
             except Exception as e:
