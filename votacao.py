@@ -34,11 +34,10 @@ st.image("Captura de tela 2025-10-23 091552-Photoroom.png", width= 170)
 st.markdown("<h1 style='text-align: center; color: #FF6900; font-size: 40px;'> SISTEMA DE VOTAÇÃO</h1>", unsafe_allow_html=True)
 
 # ======== INTRODUÇÃO ========
+
 st.markdown("""
 <div style='text-align: center; font-size: 20px; color: #333; margin-top: 10px;'>
-<b>Bem-vindo ao Sistema de Votação - Café com Gestor </b><br>
-Participe escolhendo o candidato que você acredita estar mais preparado para representar sua equipe no próximo Café com Gestor.<br>
-Digite sua matrícula, selecione o candidato de sua preferência e clique em <b>Votar</b> para registrar sua escolha.
+Bem-vindo ao Sistema de Votação - Café com Gestor  | Participe escolhendo o candidato que você acredita estar mais preparado para representar sua equipe no próximo Café com Gestor. | Digite sua matrícula, selecione o candidato de sua preferência e clique em Votar para registrar sua escolha.
 </div>
 """, unsafe_allow_html=True)
 
