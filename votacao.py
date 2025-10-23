@@ -5,10 +5,15 @@ import pandas as pd
 from streamlit import secrets
 
 # ======== ESTILO VISUAL ========
-st.markdown("""
+
+st.markdown(
+    """
     <style>
-    body {
-        background-color: #E6E6E6;
+    .stApp {
+        background-image: url("polímeros.png");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
     }
     div.stButton > button:first-child {
         background-color: #FF6600;
@@ -18,13 +23,11 @@ st.markdown("""
         height: 50px;
         width: 200px;
     }
-    .logo-container {
-        position: absolute;
-        top: 15px;
-        left: 15px;
-    }
     </style>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+)
+
 
 # ======== LOGO ========
 st.image("Captura de tela 2025-10-23 091552-Photoroom.png", width= 170)
