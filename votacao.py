@@ -2,6 +2,7 @@ import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
+import numpy as np
 from streamlit import secrets
 
 # ======== ESTILO VISUAL ========
@@ -25,7 +26,7 @@ creds_dict = secrets["google"]
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
-# Nome da planilha (o mesmo que você indicou)
+# Nome da planilha
 sheet = client.open("vota-o-phayton@firm-mariner-397622.iam.gserviceaccount.com")
 candidatos_sheet = sheet.worksheet("Candidatos")
 votos_sheet = sheet.worksheet("Votos")
@@ -56,18 +57,23 @@ if st.button("Votar"):
             novo_voto = pd.DataFrame([{"Matricula": matricula, "Candidato": escolha}])
             df_votos = pd.concat([df_votos, novo_voto], ignore_index=True)
 
-            # Atualiza planilha
-            votos_sheet.clear()
-            votos_sheet.update([df_votos.columns.values.tolist()] + df_votos.values.tolist())
+            # ======== TRATAR NaN ========
+            df_votos = df_votos.replace(np.nan, '')  # Substitui NaN por string vazia
 
-            st.success("✅ Voto registrado com sucesso!")
+            # Atualiza planilha
+            try:
+                votos_sheet.clear()
+                votos_sheet.update([df_votos.columns.values.tolist()] + df_votos.values.tolist())
+                st.success("✅ Voto registrado com sucesso!")
+            except Exception as e:
+                st.error(f"Erro ao atualizar a planilha: {e}")
 
 # ======== RESULTADOS ========
 st.subheader("📊 Resultados parciais")
 if not df_votos.empty:
-    # Contagem por candidato
     contagem = df_votos["Candidato"].value_counts().reset_index()
     contagem.columns = ["Candidato", "Votos"]
     st.dataframe(contagem)
 else:
     st.write("Nenhum voto registrado ainda.")
+``
