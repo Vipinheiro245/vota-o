@@ -8,7 +8,7 @@ from streamlit import secrets
 st.markdown("""
     <style>
     body {
-        background-color: #999999;
+        background-color: #E6E6E6;
     }
     div.stButton > button:first-child {
         background-color: #FF6600;
