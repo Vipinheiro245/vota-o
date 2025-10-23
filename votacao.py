@@ -34,13 +34,6 @@ votos_sheet = sheet.worksheet("Votos")
 # Ler candidatos
 candidatos = candidatos_sheet.col_values(1)
 
-# Carregar votos existentes
-votos = votos_sheet.get_all_records()
-if votos:
-    df_votos = pd.DataFrame(votos)
-else:
-    df_votos = pd.DataFrame(columns=["Matricula", "Candidato"])
-
 # ======== FORMULÁRIO ========
 matricula = st.text_input("Digite sua matrícula:")
 escolha = st.radio("Escolha seu candidato:", candidatos)
@@ -49,16 +42,23 @@ if st.button("Votar"):
     if not matricula.strip():
         st.error("Por favor, informe sua matrícula.")
     else:
+        # 🔄 Recarregar votos atuais da planilha para garantir dados atualizados
+        votos = votos_sheet.get_all_records()
+        if votos:
+            df_votos = pd.DataFrame(votos)
+        else:
+            df_votos = pd.DataFrame(columns=["Matricula", "Candidato"])
+
         # Verifica se já votou
-        if "Matricula" in df_votos.columns and matricula in df_votos["Matricula"].values:
+        if matricula in df_votos["Matricula"].values:
             st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
         else:
             # Adiciona voto
             novo_voto = pd.DataFrame([{"Matricula": matricula, "Candidato": escolha}])
             df_votos = pd.concat([df_votos, novo_voto], ignore_index=True)
 
-            # ======== TRATAR NaN ========
-            df_votos = df_votos.replace(np.nan, '')  # Substitui NaN por string vazia
+            # Tratar NaN
+            df_votos = df_votos.replace(np.nan, '')
 
             # Atualiza planilha
             try:
@@ -70,7 +70,9 @@ if st.button("Votar"):
 
 # ======== RESULTADOS ========
 st.subheader("📊 Resultados parciais")
-if not df_votos.empty:
+votos = votos_sheet.get_all_records()
+if votos:
+    df_votos = pd.DataFrame(votos)
     contagem = df_votos["Candidato"].value_counts().reset_index()
     contagem.columns = ["Candidato", "Votos"]
     st.dataframe(contagem)
