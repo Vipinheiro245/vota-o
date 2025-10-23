@@ -27,8 +27,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ======== LOGO ========
-logo_url = "https://raw.githubusercontent.com/Vipinheiro245/vota-o/main/Captura%20de%20tela%202025-10-23%20091552-Photoroom.png"
-st.markdown(f"<div class='logo-container'>{logo_url}</div>", unsafe_allow_html=True)
+st.image("logo.png", width=120)
 
 # ======== TÍTULO ========
 st.markdown("<h1 style='text-align: center; color: orange;'>🗳️ Sistema de Votação</h1>", unsafe_allow_html=True)
