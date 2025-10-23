@@ -28,7 +28,7 @@ if st.button("Votar"):
     df_votos = pd.DataFrame(votos)
 
     if escolha in df_votos["Candidatos"].values:
-        idx = df_votos[df_votos["Candidato"] == escolha].index[0]
+        idx = df_votos[df_votos["Candidatos"] == escolha].index[0]
         df_votos.at[idx, "Quantidade"] += 1
     else:
         df_votos = df_votos.append({"Candidatos": escolha, "Quantidade": 1}, ignore_index=True)
