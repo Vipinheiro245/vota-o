@@ -2,10 +2,12 @@ import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
+from streamlit import secrets
 
-# Autenticação com Google Sheets
+# Autenticação com Google Sheets usando Secrets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+creds_dict = secrets["google"]  # Pega os dados do Secrets
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
 # Abrir a planilha
@@ -16,7 +18,7 @@ votos_sheet = sheet.worksheet("Votos")
 # Ler candidatos
 candidatos = candidatos_sheet.col_values(1)
 
-st.title(" Sistema de Votação Online")
+st.title("🗳️ Sistema de Votação Online")
 
 # Formulário de votação
 escolha = st.radio("Escolha seu candidato:", candidatos)
@@ -34,8 +36,8 @@ if st.button("Votar"):
     votos_sheet.clear()
     votos_sheet.update([df_votos.columns.values.tolist()] + df_votos.values.tolist())
 
-    st.success("Voto registrado com sucesso!")
+    st.success("✅ Voto registrado com sucesso!")
 
 # Mostrar resultados
-st.subheader(" Resultados parciais")
+st.subheader("📊 Resultados parciais")
 st.dataframe(df_votos)
