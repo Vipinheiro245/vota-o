@@ -41,18 +41,18 @@ if st.button("Votar"):
     if not matricula.strip():
         st.error("Por favor, informe sua matrícula.")
     else:
-        # 🔄 Recarregar votos atuais da planilha
+        # 🔄 Recarregar votos atuais da planilha para garantir dados atualizados
         votos = votos_sheet.get_all_records()
         df_votos = pd.DataFrame(votos) if votos else pd.DataFrame(columns=["Matricula", "Candidato"])
 
         # ✅ Verifica se já votou
-        if matricula in df_votos["Matricula"].values:
+        if matricula in df_votos["Matricula"].astype(str).values:
             st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
         else:
             try:
                 # Adiciona apenas o novo voto sem apagar tudo
                 votos_sheet.append_row([matricula, escolha])
-                st.success("✅ Voto registrado com sucesso!")
+                st.success(f"✅ Voto registrado com sucesso para {escolha}!")
             except Exception as e:
                 st.error(f"Erro ao registrar voto: {e}")
 
