@@ -27,10 +27,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ======== LOGO ========
-st.image("Captura de tela 2025-10-23 091552-Photoroom.png", width= 180)
+st.image("Captura de tela 2025-10-23 091552-Photoroom.png", width= 170)
 
 # ======== TÍTULO ========
-st.markdown("<h1 style='text-align: center; color: #FF6900; > Sistema de Votação </h1>", unsafe_allow_html=True)
+
+st.markdown("<h1 style='text-align: center; color: #FF6900; font-size: 48px;'> SISTEMA DE VOTAÇÃO</h1>", unsafe_allow_html=True)
 
 # ======== AUTENTICAÇÃO GOOGLE SHEETS ========
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
