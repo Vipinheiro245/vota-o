@@ -27,7 +27,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ======== LOGO ========
-st.image("logo.png", width=120)
+st.image("lCaptura de tela 2025-10-23 091552-Photoroom.png", width=120)
 
 # ======== TÍTULO ========
 st.markdown("<h1 style='text-align: center; color: orange;'>🗳️ Sistema de Votação</h1>", unsafe_allow_html=True)
