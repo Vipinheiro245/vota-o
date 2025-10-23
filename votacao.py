@@ -28,7 +28,9 @@ st.markdown("""
 
 # ======== LOGO ========
 logo_url = "https://raw.githubusercontent.com/Vipinheiro245/vota-o/main/Captura%20de%20tela%202025-10-23%20091552-Photoroom.png"
-st.markdown(f"<div class='logo-container'><img src='{logo_url}' width='120'></div>", unsafe_allow_htmlO ========
+st.markdown(f"<div class='logo-container'>{logo_url}</div>", unsafe_allow_html=True)
+
+# ======== TÍTULO ========
 st.markdown("<h1 style='text-align: center; color: orange;'>🗳️ Sistema de Votação</h1>", unsafe_allow_html=True)
 
 # ======== AUTENTICAÇÃO GOOGLE SHEETS ========
@@ -59,4 +61,21 @@ if st.button("Votar"):
 
         # Verifica se já votou
         if matricula in df_votos["Matricula"].astype(str).values:
-            st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez
+            st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
+        else:
+            try:
+                votos_sheet.append_row([matricula, escolha])
+                st.success(f"✅ Voto registrado com sucesso para {escolha}!")
+            except Exception as e:
+                st.error(f"Erro ao registrar voto: {e}")
+
+# ======== RESULTADOS ========
+st.subheader("📊 Resultados parciais")
+votos = votos_sheet.get_all_records()
+if votos:
+    df_votos = pd.DataFrame(votos)
+    contagem = df_votos["Candidato"].value_counts().reset_index()
+    contagem.columns = ["Candidato", "Votos"]
+    st.dataframe(contagem)
+else:
+    st.write("Nenhum voto registrado ainda.")
