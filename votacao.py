@@ -10,6 +10,7 @@ st.markdown(
     """
     <style>
     .stApp {
+        background-image: url("https://raw.githubusercontent.com/Vipinheiro245/vota-o/main/polimeros.png")
         background-size: cover;       /* Ajusta para cobrir toda a tela */
         background-position: top;     /* Mantém alinhado ao topo */
         background-repeat: no-repeat; /* Evita repetição */
