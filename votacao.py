@@ -10,7 +10,7 @@ st.markdown(
     """
     <style>
     .stApp {
-        background-image: url("./polímeros.png");
+        background-image: url("https://github.com/Vipinheiro245/vota-o/blob/959b4366b58d151bd0cab9554a75945cf809ed9e/polimeros.png");
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
