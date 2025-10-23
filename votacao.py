@@ -2,7 +2,6 @@ import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
-import numpy as np
 from streamlit import secrets
 
 # ======== ESTILO VISUAL ========
@@ -42,31 +41,20 @@ if st.button("Votar"):
     if not matricula.strip():
         st.error("Por favor, informe sua matrícula.")
     else:
-        # 🔄 Recarregar votos atuais da planilha para garantir dados atualizados
+        # 🔄 Recarregar votos atuais da planilha
         votos = votos_sheet.get_all_records()
-        if votos:
-            df_votos = pd.DataFrame(votos)
-        else:
-            df_votos = pd.DataFrame(columns=["Matricula", "Candidato"])
+        df_votos = pd.DataFrame(votos) if votos else pd.DataFrame(columns=["Matricula", "Candidato"])
 
-        # Verifica se já votou
+        # ✅ Verifica se já votou
         if matricula in df_votos["Matricula"].values:
             st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
         else:
-            # Adiciona voto
-            novo_voto = pd.DataFrame([{"Matricula": matricula, "Candidato": escolha}])
-            df_votos = pd.concat([df_votos, novo_voto], ignore_index=True)
-
-            # Tratar NaN
-            df_votos = df_votos.replace(np.nan, '')
-
-            # Atualiza planilha
             try:
-                votos_sheet.clear()
-                votos_sheet.update([df_votos.columns.values.tolist()] + df_votos.values.tolist())
+                # Adiciona apenas o novo voto sem apagar tudo
+                votos_sheet.append_row([matricula, escolha])
                 st.success("✅ Voto registrado com sucesso!")
             except Exception as e:
-                st.error(f"Erro ao atualizar a planilha: {e}")
+                st.error(f"Erro ao registrar voto: {e}")
 
 # ======== RESULTADOS ========
 st.subheader("📊 Resultados parciais")
