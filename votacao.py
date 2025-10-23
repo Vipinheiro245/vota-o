@@ -11,7 +11,7 @@ creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
 # Abrir a planilha
-sheet = client.open("votacao_candidatos")  # Nome exato da planilha
+sheet = client.open("vota-o-phayton@firm-mariner-397622.iam.gserviceaccount.com")  # Nome exato da planilha
 candidatos_sheet = sheet.worksheet("Candidatos")
 votos_sheet = sheet.worksheet("Votos")
 
