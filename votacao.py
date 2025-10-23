@@ -28,7 +28,7 @@ st.markdown("""
 
 # ======== LOGO ========
 logo_url = "https://raw.githubusercontent.com/Vipinheiro245/vota-o/main/Captura%20de%20tela%202025-10-23%20091552-Photoroom.png"
-st.markdown(f"<div class='logo-container'>{logo_url}</div>", unsafe_allow_html=True)
+st.markdown(f"<div class='logo-container'><img src='{logo_url}' width='120html=True)
 
 # ======== TÍTULO ========
 st.markdown("<h1 style='text-align: center; color: orange;'> Sistema de Votação</h1>", unsafe_allow_html=True)
@@ -79,3 +79,4 @@ if votos:
     st.dataframe(contagem)
 else:
     st.write("Nenhum voto registrado ainda.")
+``
