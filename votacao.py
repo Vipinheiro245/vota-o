@@ -37,9 +37,13 @@ st.markdown("<h1 style='text-align: center; color: #FF6900; font-size: 40px;'> S
 
 st.markdown("""
 <div style='text-align: center; font-size: 20px; color: #333; margin-top: 10px;'>
-Bem-vindo ao Sistema de Votação - Café com Gestor  | Participe escolhendo o candidato que você acredita estar mais preparado para representar sua equipe no próximo Café com Gestor. | Digite sua matrícula, selecione o candidato de sua preferência e clique em Votar para registrar sua escolha.
+Bem-vindo ao Sistema de Votação - Café com Gestor  Participe escolhendo o candidato que você acredita estar mais preparado para representar sua equipe no próximo Café com Gestor. Digite sua matrícula, selecione o candidato de sua preferência e clique em Votar para registrar sua escolha.
 </div>
 """, unsafe_allow_html=True)
+
+# ======== ESPAÇAMENTO EXTRA ========
+st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
+
 
 # ======== AUTENTICAÇÃO GOOGLE SHEETS ========
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
