@@ -76,4 +76,3 @@ if not df_votos.empty:
     st.dataframe(contagem)
 else:
     st.write("Nenhum voto registrado ainda.")
-``
