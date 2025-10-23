@@ -6,12 +6,12 @@ from streamlit import secrets
 
 # Autenticação com Google Sheets usando Secrets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds_dict = secrets["google"]  # Pega os dados do Secrets
+creds_dict = secrets["google"]
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
 # Abrir a planilha
-sheet = client.open("votacao_candidatos")  # Nome exato da planilha no Google Sheets
+sheet = client.open("votacao_candidatos")  # Nome exato da planilha
 candidatos_sheet = sheet.worksheet("Candidatos")
 votos_sheet = sheet.worksheet("Votos")
 
@@ -38,11 +38,11 @@ if st.button("Votar"):
 
     st.success("✅ Voto registrado com sucesso!")
 
-# Mostrar resultados
-st.subheader("📊 Resultados parciais")
+# Mostrar resultados (carregar sempre)
 votos = votos_sheet.get_all_records()
 df_votos = pd.DataFrame(votos)
 
+st.subheader("📊 Resultados parciais")
 if not df_votos.empty:
     st.dataframe(df_votos)
 else:
