@@ -32,10 +32,10 @@ escolha = st.radio("Escolha seu candidato:", candidatos)
 
 if st.button("Votar"):
     if "Candidato" not in df_votos.columns:
-        df_votos = pd.DataFrame(columns=["Candidatos", "Quantidade"])
+        df_votos = pd.DataFrame(columns=["Candidato", "Quantidade"])
 
-    if escolha in df_votos["Candidatos"].values:
-        idx = df_votos[df_votos["Candidatos"] == escolha].index[0]
+    if escolha in df_votos["Candidato"].values:
+        idx = df_votos[df_votos["Candidato"] == escolha].index[0]
         df_votos.at[idx, "Quantidade"] = int(df_votos.at[idx, "Quantidade"]) + 1
     else:
         df_votos = pd.concat([df_votos, pd.DataFrame([{"Candidato": escolha, "Quantidade": 1}])], ignore_index=True)
