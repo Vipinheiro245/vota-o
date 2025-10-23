@@ -18,14 +18,20 @@ st.markdown("""
         height: 50px;
         width: 200px;
     }
+    .logo-container {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+    }
     </style>
 """, unsafe_allow_html=True)
-
-st.markdown("<h1 style='text-align: center; color: orange;'> Sistema de Votação</h1>", unsafe_allow_html=True)
 
 # ======== LOGO ========
 logo_url = "https://raw.githubusercontent.com/Vipinheiro245/vota-o/main/Captura%20de%20tela%202025-10-23%20091552-Photoroom.png"
 st.markdown(f"<div class='logo-container'><img src='{logo>", unsafe_allow_html=True)
+
+# ======== TÍTULO ========
+st.markdown("<h1 style='text-align: center; color: orange;'> Sistema de Votação</h1>", unsafe_allow_html=True)
 
 # ======== AUTENTICAÇÃO GOOGLE SHEETS ========
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
