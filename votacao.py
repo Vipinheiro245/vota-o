@@ -21,17 +21,17 @@ candidatos = candidatos_sheet.col_values(1)
 st.title("🗳️ Sistema de Votação Online")
 
 # Formulário de votação
-escolha = st.radio("Escolha seu candidato:", candidatos)
+escolha = st.radio("Escolha seu candidatos:", candidatos)
 
 if st.button("Votar"):
     votos = votos_sheet.get_all_records()
     df_votos = pd.DataFrame(votos)
 
-    if escolha in df_votos["Candidato"].values:
+    if escolha in df_votos["Candidatos"].values:
         idx = df_votos[df_votos["Candidato"] == escolha].index[0]
         df_votos.at[idx, "Quantidade"] += 1
     else:
-        df_votos = df_votos.append({"Candidato": escolha, "Quantidade": 1}, ignore_index=True)
+        df_votos = df_votos.append({"Candidatos": escolha, "Quantidade": 1}, ignore_index=True)
 
     votos_sheet.clear()
     votos_sheet.update([df_votos.columns.values.tolist()] + df_votos.values.tolist())
