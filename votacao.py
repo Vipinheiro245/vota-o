@@ -6,11 +6,12 @@ from streamlit import secrets
 
 # ======== ESTILO VISUAL ========
 
+
 st.markdown(
     """
     <style>
     .stApp {
-        background-image: ("polímeros.png");
+        background-image: url("polimeros.png");
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
