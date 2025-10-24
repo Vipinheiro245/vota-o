@@ -14,10 +14,11 @@ def set_background(image_file):
         <style>
         [data-testid="stAppViewContainer"] {{
             background-image: url("data:image/png;base64,{encoded}");
-            background-size: cover;
-            background-position: center;
+            background-size: contain;  /* MUDANÇA AQUI - mostra a imagem completa */
+            background-position: center top;  /* ajusta posição */
             background-repeat: no-repeat;
             background-attachment: fixed;
+            background-color: #f0f0f0;  /* cor de fundo para áreas sem imagem */
             min-height: 100vh;
         }}
         [data-testid="stHeader"] {{
@@ -27,6 +28,7 @@ def set_background(image_file):
             max-width: 900px;
             margin: auto;
             padding: 40px;
+            margin-top: 100px;  /* adiciona espaço no topo */
             background-color: rgba(255, 255, 255, 0.92);
             border-radius: 15px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -50,8 +52,7 @@ def set_background(image_file):
         """
         st.markdown(css, unsafe_allow_html=True)
     except FileNotFoundError:
-        st.error("⚠️ Arquivo 'polimeros.png' não encontrado! Verifique se está na pasta correta.")
-
+        st.error("⚠️ Arquivo 'polimeros.png' não encontrado!")
 # ======== CHAMA O FUNDO ========
 set_background("polimeros.png")
 
