@@ -1,45 +1,48 @@
-import streamlit as st
+iimport streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 from streamlit import secrets
+import base64
 
-# ======== ESTILO VISUAL ========
-
-st.markdown(
-    """
+# ======== FUNÇÃO PARA DEFINIR FUNDO ========
+def set_background(image_file):
+    with open(image_file, "rb") as f:
+        encoded = base64.b64encode(f.read()).decode()
+    css = f"""
     <style>
-    [data-testid="stAppViewContainer"] {
-        background-image: url("https://raw.githubusercontent.com/Vipinheiro245/vota-o/main/polimeros.png");
+    [data-testid="stAppViewContainer"] {{
+        background-image: url("data:image/png;base64,{encoded}");
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
         background-attachment: fixed;
         min-height: 100vh;
-    }
-    [data-testid="stHeader"] {
-        background: rgba(0,0,0,0);
-    }
-    .block-container {
+    }}
+    [data-testid="stHeader"] {{
+        background: rgba(0, 0, 0, 0);
+    }}
+    .block-container {{
         max-width: 900px;
         margin: auto;
-        padding-top: 50px;
-        background-color: rgba(255, 255, 255, 0.85); /* leve transparência para leitura */
-        border-radius: 15px;
         padding: 40px;
-    }
-    div.stButton > button:first-child {
+        background-color: rgba(255, 255, 255, 0.88); /* leve transparência */
+        border-radius: 15px;
+    }}
+    div.stButton > button:first-child {{
         background-color: #FF6600;
         color: white;
         font-size: 18px;
         border-radius: 8px;
         height: 50px;
         width: 200px;
-    }
+    }}
     </style>
-    """,
-    unsafe_allow_html=True
-)
+    """
+    st.markdown(css, unsafe_allow_html=True)
+
+# ======== CHAMA O FUNDO ========
+set_background("polimeros.png")
 
 # ======== TÍTULO ========
 
@@ -63,16 +66,13 @@ creds_dict = secrets["google"]
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
-# Nome da planilha (ajuste se necessário)
 sheet = client.open("vota-o-phayton@firm-mariner-397622.iam.gserviceaccount.com")
 candidatos_sheet = sheet.worksheet("Candidatos")
 votos_sheet = sheet.worksheet("Votos")
 
-# Ler candidatos
 candidatos = candidatos_sheet.col_values(1)
 
 # ======== FORMULÁRIO ========
-
 matricula = st.text_input("Digite sua matrícula:")
 escolha = st.radio("Escolha seu candidato:", candidatos)
 
