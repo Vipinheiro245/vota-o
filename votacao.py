@@ -9,18 +9,24 @@ from streamlit import secrets
 st.markdown(
     """
     <style>
-    .stApp {
-        background-image: url("https://raw.githubusercontent.com/Vipinheiro245/vota-o/main/polimeros.png")
-        background-size: cover;       /* Ajusta para cobrir toda a tela */
-        background-position: top;     /* Mantém alinhado ao topo */
-        background-repeat: no-repeat; /* Evita repetição */
-        background-attachment: fixed; /* Fixa a imagem no topo mesmo com scroll */
-        min-height: 100vh;            /* Garante altura mínima da tela */
+    [data-testid="stAppViewContainer"] {
+        background-image: url("https://raw.githubusercontent.com/Vipinheiro245/vota-o/main/polimeros.png");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        min-height: 100vh;
+    }
+    [data-testid="stHeader"] {
+        background: rgba(0,0,0,0);
     }
     .block-container {
-        max-width: 900px;             /* Centraliza conteúdo */
+        max-width: 900px;
         margin: auto;
-        padding-top: 50px;            /* Espaço para não colar no topo */
+        padding-top: 50px;
+        background-color: rgba(255, 255, 255, 0.85); /* leve transparência para leitura */
+        border-radius: 15px;
+        padding: 40px;
     }
     div.stButton > button:first-child {
         background-color: #FF6600;
@@ -37,27 +43,27 @@ st.markdown(
 
 # ======== TÍTULO ========
 
-st.markdown("<h1 style='text-align: center; color: #FF6900; font-size: 40px;'> SISTEMA DE VOTAÇÃO</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #FF6900; font-size: 40px;'>SISTEMA DE VOTAÇÃO</h1>", unsafe_allow_html=True)
 
 # ======== INTRODUÇÃO ========
 
 st.markdown("""
 <div style='text-align: center; font-size: 20px; color: #333; margin-top: 10px;'>
-Bem-vindo ao Sistema de Votação - Café com Gestor  Participe escolhendo o candidato que você acredita estar mais preparado para representar sua equipe no próximo Café com Gestor. Digite sua matrícula, selecione o candidato de sua preferência e clique em Votar para registrar sua escolha.
+Bem-vindo ao Sistema de Votação - Café com Gestor. Participe escolhendo o candidato que você acredita estar mais preparado para representar sua equipe no próximo Café com Gestor. 
+Digite sua matrícula, selecione o candidato de sua preferência e clique em Votar para registrar sua escolha.
 </div>
 """, unsafe_allow_html=True)
 
-# ======== ESPAÇAMENTO EXTRA ========
 st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
 
-
 # ======== AUTENTICAÇÃO GOOGLE SHEETS ========
+
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds_dict = secrets["google"]
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
-# Nome da planilha
+# Nome da planilha (ajuste se necessário)
 sheet = client.open("vota-o-phayton@firm-mariner-397622.iam.gserviceaccount.com")
 candidatos_sheet = sheet.worksheet("Candidatos")
 votos_sheet = sheet.worksheet("Votos")
@@ -66,6 +72,7 @@ votos_sheet = sheet.worksheet("Votos")
 candidatos = candidatos_sheet.col_values(1)
 
 # ======== FORMULÁRIO ========
+
 matricula = st.text_input("Digite sua matrícula:")
 escolha = st.radio("Escolha seu candidato:", candidatos)
 
@@ -73,11 +80,9 @@ if st.button("Votar"):
     if not matricula.strip():
         st.error("Por favor, informe sua matrícula.")
     else:
-        # Recarregar votos atuais
         votos = votos_sheet.get_all_records()
         df_votos = pd.DataFrame(votos) if votos else pd.DataFrame(columns=["Matricula", "Candidato"])
 
-        # Verifica se já votou
         if matricula in df_votos["Matricula"].astype(str).values:
             st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
         else:
@@ -86,4 +91,3 @@ if st.button("Votar"):
                 st.success(f"✅ Voto registrado com sucesso para {escolha}!")
             except Exception as e:
                 st.error(f"Erro ao registrar voto: {e}")
-
