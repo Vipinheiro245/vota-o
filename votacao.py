@@ -52,4 +52,56 @@ def set_background(image_file):
         /* ======== SOMENTE OS LABELS DO INPUT E RADIO ======== */
         div[data-testid="stTextInput"] label p,
         div[data-testid="stRadio"] > label p {{
-            font-size: 22px !important;   /
+            font-size: 22px !important;   /* aumenta um pouco, sem exagero */
+            font-weight: normal !important;  /* tira o negrito */
+            color: #333 !important;
+        }}
+        </style>
+        """
+        st.markdown(css, unsafe_allow_html=True)
+    except FileNotFoundError:
+        st.error("⚠️ Arquivo 'polimeros.png' não encontrado!")
+
+# ======== CHAMA O FUNDO ========
+set_background("polimeros.png")
+
+# ======== TÍTULO ========
+st.markdown("<h1 style='text-align: center; color: #FF6900; font-size: 40px;'>SISTEMA DE VOTAÇÃO</h1>", unsafe_allow_html=True)
+
+# ======== INTRODUÇÃO ========
+st.markdown("""
+<div style='text-align: center; font-size: 20px; color: #333; margin-top: 10px;'>
+Bem-vindo ao Sistema de Votação - Café com Gestor.
+""", unsafe_allow_html=True)
+
+st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
+
+# ======== AUTENTICAÇÃO GOOGLE SHEETS ========
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds_dict = secrets["google"]
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+client = gspread.authorize(creds)
+sheet = client.open("vota-o-phayton@firm-mariner-397622.iam.gserviceaccount.com")
+candidatos_sheet = sheet.worksheet("Candidatos")
+votos_sheet = sheet.worksheet("Votos")
+candidatos = candidatos_sheet.col_values(1)
+
+# ======== FORMULÁRIO ========
+matricula = st.text_input("Digite sua matrícula:")
+escolha = st.radio("Escolha seu candidato:", candidatos)
+
+if st.button("Votar"):
+    if not matricula.strip():
+        st.error("Por favor, informe sua matrícula.")
+    else:
+        votos = votos_sheet.get_all_records()
+        df_votos = pd.DataFrame(votos) if votos else pd.DataFrame(columns=["Matricula", "Candidato"])
+        
+        if matricula in df_votos["Matricula"].astype(str).values:
+            st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
+        else:
+            try:
+                votos_sheet.append_row([matricula, escolha])
+                st.success(f"✅ Voto registrado com sucesso para {escolha}!")
+            except Exception as e:
+                st.error(f"Erro ao registrar voto: {e}")
