@@ -88,7 +88,8 @@ candidatos = candidatos_sheet.col_values(1)
 
 # ======== FORMULÁRIO ========
 matricula = st.text_input("Digite sua matrícula:")
-escolha = st.radio("", candidatos, label_visibility="collapsed")
+escolha = st.radio("Escolha seu candidato:", candidatos)
+
 
 
 if st.button("Votar"):
