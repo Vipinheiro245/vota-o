@@ -107,9 +107,16 @@ if st.button("Votar"):
                 df_atualizado = pd.DataFrame(votos_atualizados)
                 contagem = df_atualizado["Candidato"].value_counts().to_dict()
 
-                # Percorre linhas e atualiza coluna 3
+                # Prepara atualização em lote
+                updates = []
                 for i, candidato in enumerate(df_atualizado["Candidato"], start=2):  # começa na linha 2
-                    votos_sheet.update_cell(i, 3, contagem.get(candidato, 0))
+                    updates.append({
+                        "range": f"C{i}",
+                        "values": [[contagem.get(candidato, 0)]]
+                    })
+
+                # Atualiza tudo de uma vez
+                votos_sheet.batch_update([{"range": u["range"], "values": u["values"]} for u in updates])
 
                 st.success(f"✅ Voto registrado com sucesso para {escolha}!")
             except Exception as e:
