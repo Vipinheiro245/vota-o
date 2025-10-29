@@ -48,11 +48,27 @@ def set_background(image_file):
             background-color: #FF7700;
             transform: scale(1.05);
         }}
+        /* ======== AJUSTE DE TAMANHO DAS LETRAS ======== */
+        div[data-testid="stTextInput"] label {{
+            font-size: 24px !important;
+            font-weight: bold;
+            color: #333;
+        }}
+        div[data-testid="stRadio"] label {{
+            font-size: 24px !important;
+            font-weight: bold;
+            color: #333;
+        }}
+        div[data-testid="stRadio"] div[role="radiogroup"] label {{
+            font-size: 20px !important;
+            color: #000;
+        }}
         </style>
         """
         st.markdown(css, unsafe_allow_html=True)
     except FileNotFoundError:
         st.error("⚠️ Arquivo 'polimeros.png' não encontrado!")
+
 # ======== CHAMA O FUNDO ========
 set_background("polimeros.png")
 
@@ -62,9 +78,7 @@ st.markdown("<h1 style='text-align: center; color: #FF6900; font-size: 40px;'>SI
 # ======== INTRODUÇÃO ========
 st.markdown("""
 <div style='text-align: center; font-size: 20px; color: #333; margin-top: 10px;'>
-Bem-vindo ao Sistema de Votação - Café com Gestor. Participe escolhendo o candidato que você acredita estar mais preparado para representar sua equipe no próximo Café com Gestor. 
-Digite sua matrícula, selecione o candidato de sua preferência e clique em Votar para registrar sua escolha.
-</div>
+Bem-vindo ao Sistema de Votação - Café com Gestor.
 """, unsafe_allow_html=True)
 
 st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
