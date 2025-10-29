@@ -50,12 +50,12 @@ def set_background(image_file):
         }}
         /* ======== AUMENTAR TAMANHO DOS LABELS ======== */
         div[data-testid="stTextInput"] label {{
-            font-size: 40px !important;  /* MUITO MAIOR */
+            font-size: 46px !important;  /* MUITO MAIOR */
             font-weight: bold;
             color: #333;
         }}
         div[data-testid="stRadio"] label {{
-            font-size: 40px !important;  /* MUITO MAIOR */
+            font-size: 46px !important;  /* MUITO MAIOR */
             font-weight: bold;
             color: #333;
         }}
