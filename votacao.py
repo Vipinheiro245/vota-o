@@ -14,11 +14,11 @@ def set_background(image_file):
         <style>
         [data-testid="stAppViewContainer"] {{
             background-image: url("data:image/png;base64,{encoded}");
-            background-size: contain;  /* MUDANÇA AQUI - mostra a imagem completa */
-            background-position: center top;  /* ajusta posição */
+            background-size: contain;
+            background-position: center top;
             background-repeat: no-repeat;
             background-attachment: fixed;
-            background-color: #f0f0f0;  /* cor de fundo para áreas sem imagem */
+            background-color: #f0f0f0;
             min-height: 100vh;
         }}
         [data-testid="stHeader"] {{
@@ -28,7 +28,7 @@ def set_background(image_file):
             max-width: 900px;
             margin: auto;
             padding: 40px;
-            margin-top: 100px;  /* adiciona espaço no topo */
+            margin-top: 100px;
             background-color: rgba(255, 255, 255, 0.92);
             border-radius: 15px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -36,10 +36,10 @@ def set_background(image_file):
         div.stButton > button:first-child {{
             background-color: #FF6600;
             color: white;
-            font-size: 18px;
+            font-size: 20px;
             border-radius: 8px;
-            height: 50px;
-            width: 200px;
+            height: 55px;
+            width: 220px;
             border: none;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -50,17 +50,17 @@ def set_background(image_file):
         }}
         /* ======== AJUSTE DE TAMANHO DAS LETRAS ======== */
         div[data-testid="stTextInput"] label {{
-            font-size: 24px !important;
+            font-size: 32px !important;
             font-weight: bold;
             color: #333;
         }}
         div[data-testid="stRadio"] label {{
-            font-size: 24px !important;
+            font-size: 32px !important;
             font-weight: bold;
             color: #333;
         }}
         div[data-testid="stRadio"] div[role="radiogroup"] label {{
-            font-size: 20px !important;
+            font-size: 26px !important;
             color: #000;
         }}
         </style>
