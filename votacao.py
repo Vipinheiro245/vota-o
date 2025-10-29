@@ -36,10 +36,10 @@ def set_background(image_file):
         div.stButton > button:first-child {{
             background-color: #FF6600;
             color: white;
-            font-size: 20px;
+            font-size: 18px;
             border-radius: 8px;
-            height: 55px;
-            width: 220px;
+            height: 50px;
+            width: 200px;
             border: none;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -48,20 +48,16 @@ def set_background(image_file):
             background-color: #FF7700;
             transform: scale(1.05);
         }}
-        /* ======== AJUSTE DE TAMANHO DAS LETRAS ======== */
+        /* ======== AUMENTAR TAMANHO DOS LABELS ======== */
         div[data-testid="stTextInput"] label {{
-            font-size: 32px !important;
+            font-size: 36px !important;  /* MUITO MAIOR */
             font-weight: bold;
             color: #333;
         }}
         div[data-testid="stRadio"] label {{
-            font-size: 32px !important;
+            font-size: 36px !important;  /* MUITO MAIOR */
             font-weight: bold;
             color: #333;
-        }}
-        div[data-testid="stRadio"] div[role="radiogroup"] label {{
-            font-size: 26px !important;
-            color: #000;
         }}
         </style>
         """
