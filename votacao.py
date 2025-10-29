@@ -49,11 +49,11 @@ def set_background(image_file):
             transform: scale(1.05);
         }}
 
-        /* ======== AUMENTAR TAMANHO DOS LABELS ======== */
+        /* ======== SOMENTE OS LABELS DO INPUT E RADIO ======== */
         div[data-testid="stTextInput"] label p,
-        div[data-testid="stRadio"] label p {{
-            font-size: 28px !important;  /* Aumente aqui conforme desejar (ex: 30px, 32px...) */
-            font-weight: 700 !important;
+        div[data-testid="stRadio"] > label p {{
+            font-size: 22px !important;   /* aumenta um pouco, sem exagero */
+            font-weight: normal !important;  /* tira o negrito */
             color: #333 !important;
         }}
         </style>
