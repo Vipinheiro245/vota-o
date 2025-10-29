@@ -48,12 +48,10 @@ def set_background(image_file):
             background-color: #FF7700;
             transform: scale(1.05);
         }}
-
-        /* ======== SOMENTE OS LABELS DO INPUT E RADIO ======== */
         div[data-testid="stTextInput"] label p,
         div[data-testid="stRadio"] > label p {{
-            font-size: 22px !important;   /* aumenta um pouco, sem exagero */
-            font-weight: normal !important;  /* tira o negrito */
+            font-size: 22px !important;
+            font-weight: normal !important;
             color: #333 !important;
         }}
         </style>
@@ -101,7 +99,18 @@ if st.button("Votar"):
             st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
         else:
             try:
+                # Adiciona o voto
                 votos_sheet.append_row([matricula, escolha])
+
+                # Atualiza contagem na coluna 3 (Total de Votos)
+                votos_atualizados = votos_sheet.get_all_records()
+                df_atualizado = pd.DataFrame(votos_atualizados)
+                contagem = df_atualizado["Candidato"].value_counts().to_dict()
+
+                # Percorre linhas e atualiza coluna 3
+                for i, candidato in enumerate(df_atualizado["Candidato"], start=2):  # começa na linha 2
+                    votos_sheet.update_cell(i, 3, contagem.get(candidato, 0))
+
                 st.success(f"✅ Voto registrado com sucesso para {escolha}!")
             except Exception as e:
                 st.error(f"Erro ao registrar voto: {e}")
