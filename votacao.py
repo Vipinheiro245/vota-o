@@ -2,174 +2,92 @@ import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
-import base64
 from streamlit import secrets
-import unicodedata
+import base64
 
-# ======== FUNÇÃO DE FUNDO ========
+# ======== FUNÇÃO PARA DEFINIR FUNDO ========
 def set_background(image_file):
-    with open(image_file, "rb") as f:
-        encoded = base64.b64encode(f.read()).decode()
-    css = f"""
-    <style>
-    [data-testid="stAppViewContainer"] {{
-        background-image: url("data:image/png;base64,{encoded}");
-        background-size: contain;
-        background-position: center top;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        background-color: #f0f0f0;
-        min-height: 100vh;
-    }}
-    [data-testid="stHeader"] {{
-        background: rgba(0, 0, 0, 0);
-    }}
-    .block-container {{
-        max-width: 900px;
-        margin: auto;
-        padding: 40px;
-        margin-top: 100px;
-        background-color: rgba(255, 255, 255, 0.92);
-        border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }}
-    div.stButton > button:first-child {{
-        background-color: #FF6600;
-        color: white;
-        font-size: 18px;
-        border-radius: 8px;
-        height: 50px;
-        width: 200px;
-        border: none;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }}
-    div.stButton > button:first-child:hover {{
-        background-color: #FF7700;
-        transform: scale(1.05);
-    }}
-    div[data-testid="stTextInput"] label p,
-    div[data-testid="stRadio"] > label p {{
-        font-size: 22px !important;
-        font-weight: normal !important;
-        color: #333 !important;
-    }}
-    </style>
-    """
-    st.markdown(css, unsafe_allow_html=True)
+    try:
+        with open(image_file, "rb") as f:
+            encoded = base64.b64encode(f.read()).decode()
+        css = f"""
+        <style>
+        [data-testid="stAppViewContainer"] {{
+            background-image: url("data:image/png;base64,{encoded}");
+            background-size: contain;
+            background-position: center top;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-color: #f0f0f0;
+            min-height: 100vh;
+        }}
+        [data-testid="stHeader"] {{
+            background: rgba(0, 0, 0, 0);
+        }}
+        .block-container {{
+            max-width: 900px;
+            margin: auto;
+            padding: 40px;
+            margin-top: 100px;
+            background-color: rgba(255, 255, 255, 0.92);
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }}
+        div.stButton > button:first-child {{
+            background-color: #FF6600;
+            color: white;
+            font-size: 18px;
+            border-radius: 8px;
+            height: 50px;
+            width: 200px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }}
+        div.stButton > button:first-child:hover {{
+            background-color: #FF7700;
+            transform: scale(1.05);
+        }}
+        div[data-testid="stTextInput"] label p,
+        div[data-testid="stRadio"] > label p {{
+            font-size: 22px !important;
+            font-weight: normal !important;
+            color: #333 !important;
+        }}
+        </style>
+        """
+        st.markdown(css, unsafe_allow_html=True)
+    except FileNotFoundError:
+        st.error("⚠️ Arquivo 'polimeros.png' não encontrado!")
 
-
-# ======== TELA ========
+# ======== CHAMA O FUNDO ========
 set_background("polimeros.png")
+
+# ======== TÍTULO ========
 st.markdown("<h1 style='text-align: center; color: #FF6900; font-size: 40px;'>SISTEMA DE VOTAÇÃO</h1>", unsafe_allow_html=True)
-st.markdown("<div style='text-align: center; font-size: 20px; color: #333; margin-top: 10px;'>Bem-vindo ao Sistema de Votação - Café com Gestor.</div>", unsafe_allow_html=True)
+
+# ======== INTRODUÇÃO ========
+st.markdown("""
+<div style='text-align: center; font-size: 20px; color: #333; margin-top: 10px;'>
+Bem-vindo ao Sistema de Votação - Café com Gestor.
+""", unsafe_allow_html=True)
 st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
 
-
-# ======== CONEXÃO COM GOOGLE SHEETS ========
+# ======== AUTENTICAÇÃO GOOGLE SHEETS ========
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds_dict = secrets["google"]
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
-
-# Nome do arquivo (ajuste se necessário)
 sheet = client.open("vota-o-phayton@firm-mariner-397622.iam.gserviceaccount.com")
 
-# Abas
 candidatos_sheet = sheet.worksheet("Candidatos")
 votos_sheet = sheet.worksheet("Votos")
 
+candidatos = candidatos_sheet.col_values(1)
 
-# ======== INTERFACE ========
-candidatos = candidatos_sheet.col_values(1) or []  # lista de candidatos
+# ======== FORMULÁRIO ========
 matricula = st.text_input("Digite sua matrícula:")
 escolha = st.radio("Escolha seu candidato:", candidatos)
 
+if st
 
-# ======== FUNÇÕES AUXILIARES ========
-def normalize_col_name(col):
-    """Normaliza um nome de coluna e mapeia para os nomes esperados."""
-    s = col.strip()
-    s_ascii = unicodedata.normalize('NFKD', s).encode('ASCII', 'ignore').decode('utf-8').lower()
-    if "matric" in s_ascii:  # cobre matricula, matrícula, etc.
-        return "Matrículas"
-    if "candidat" in s_ascii:  # cobre candidato, candidatos, etc.
-        return "Candidato"
-    if "total" in s_ascii or "voto" in s_ascii:  # total de votos, votos
-        return "Total de Votos"
-    return s  # fallback: mantém original (apenas strip)
-
-
-def ensure_expected_columns(df):
-    """Garante que o DataFrame tenha as colunas: Matrículas, Candidato, Total de Votos."""
-    # Se df estiver vazio (sem colunas), cria com colunas esperadas
-    expected = ["Matrículas", "Candidato", "Total de Votos"]
-    if df.empty and df.columns.size == 0:
-        return pd.DataFrame(columns=expected)
-
-    # Normaliza nomes
-    new_cols = [normalize_col_name(col) for col in df.columns]
-    df.columns = new_cols
-
-    # Adiciona colunas faltantes com valores vazios
-    for col in expected:
-        if col not in df.columns:
-            df[col] = "" if col != "Total de Votos" else 0
-
-    # Reordena colunas para consistência
-    return df[expected]
-
-
-# ======== LÓGICA DE VOTO ========
-if st.button("Votar"):
-    if not matricula.strip():
-        st.error("⚠️ Por favor, informe sua matrícula antes de votar.")
-    else:
-        # Lê todos os votos existentes
-        votos_existentes = votos_sheet.get_all_records()
-        df_votos = pd.DataFrame(votos_existentes) if votos_existentes else pd.DataFrame()
-
-        # Normaliza/garante colunas esperadas
-        df_votos = ensure_expected_columns(df_votos)
-
-        # --- DEBUG: exibe colunas e primeiras linhas (ajuda a ver o que veio da planilha) ---
-        st.write("Colunas após normalização:", df_votos.columns.tolist())
-        st.write("Primeiras linhas (preview):", df_votos.head())
-
-        # Verifica se a matrícula já votou
-        # (Transforma para str para evitar problemas com NaN)
-        try:
-            ja_votou = df_votos["Matrículas"].astype(str).apply(lambda x: matricula in x.split(";") if x else False).any()
-        except Exception as e:
-            st.error(f"Erro ao verificar matrículas: {e}")
-            st.stop()
-
-        if ja_votou:
-            st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
-        else:
-            # Se o candidato já existe, soma 1 e adiciona matrícula à lista
-            try:
-                candidatos_existentes = df_votos["Candidato"].astype(str).values
-            except KeyError:
-                # caso improvável, garante coluna e segue
-                df_votos["Candidato"] = ""
-                candidatos_existentes = df_votos["Candidato"].astype(str).values
-
-            if escolha in candidatos_existentes:
-                idx = df_votos.index[df_votos["Candidato"] == escolha][0]
-                matriculas_antigas = str(df_votos.at[idx, "Matrículas"]) if df_votos.at[idx, "Matrículas"] is not None else ""
-                novas_matriculas = matriculas_antigas + ";" + matricula if matriculas_antigas else matricula
-                df_votos.at[idx, "Matrículas"] = novas_matriculas
-                # corrige caso Total de Votos venha como string
-                df_votos.at[idx, "Total de Votos"] = int(df_votos.at[idx, "Total de Votos"]) + 1
-            else:
-                novo = pd.DataFrame({"Matrículas": [matricula], "Candidato": [escolha], "Total de Votos": [1]})
-                df_votos = pd.concat([df_votos, novo], ignore_index=True)
-
-            # Limpa e atualiza a planilha no Google Sheets
-            votos_sheet.clear()
-            votos_sheet.append_row(["Matrículas", "Candidato", "Total de Votos"])
-            for _, row in df_votos.iterrows():
-                votos_sheet.append_row([row["Matrículas"], row["Candidato"], int(row["Total de Votos"])])
-
-            st.success(f"✅ Voto registrado com sucesso para {escolha}!")
