@@ -83,20 +83,7 @@ client = gspread.authorize(creds)
 # Nome do arquivo e abas
 sheet = client.open("vota-o-phayton@firm-mariner-397622.iam.gserviceaccount.com")
 candidatos_sheet = sheet.worksheet("Candidatos")
-
-# tenta obter a aba "Votos Brutos" (histórico), se não existir cria
-try:
-    votos_brutos_sheet = sheet.worksheet("Votos Brutos")
-except Exception:
-    votos_brutos_sheet = sheet.add_worksheet(title="Votos Brutos", rows="1000", cols="2")
-    votos_brutos_sheet.append_row(["Matricula", "Candidato"])
-
-# aba de resumo consolidado
-try:
-    votos_sheet = sheet.worksheet("Votos")
-except Exception:
-    votos_sheet = sheet.add_worksheet(title="Votos", rows="1000", cols="3")
-    votos_sheet.append_row(["Matricula", "Candidato", "Total de Votos"])
+votos_sheet = sheet.worksheet("Votos")
 
 # Lista de candidatos
 candidatos = candidatos_sheet.col_values(1)
@@ -108,33 +95,37 @@ escolha = st.radio("Escolha seu candidato:", candidatos)
 # ======== LÓGICA DE VOTO ========
 if st.button("Votar"):
     if not matricula.strip():
-        st.error("⚠️ Por favor, informe sua matrícula antes de votar.")
+        st.error("Por favor, informe sua matrícula.")
     else:
-        # Lê votos anteriores (histórico)
-        votos_existentes = votos_brutos_sheet.get_all_records()
-        df_votos = pd.DataFrame(votos_existentes) if votos_existentes else pd.DataFrame(columns=["Matricula", "Candidato"])
-
-        # Verifica se matrícula já votou
+        votos = votos_sheet.get_all_records()
+        df_votos = pd.DataFrame(votos) if votos else pd.DataFrame(columns=["Matricula", "Candidato", "Total de Votos"])
+        
         if matricula in df_votos["Matricula"].astype(str).values:
             st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
         else:
             try:
-                # Adiciona voto ao histórico
-                votos_brutos_sheet.append_row([matricula, escolha])
+                # Adiciona o voto bruto
+                votos_sheet.append_row([matricula, escolha])
 
-                # Atualiza contagem consolidada
-                votos_atualizados = votos_brutos_sheet.get_all_records()
+                # Atualiza a contagem consolidada
+                votos_atualizados = votos_sheet.get_all_records()
                 df_atualizado = pd.DataFrame(votos_atualizados)
 
+                # Agrupa os votos por candidato
                 contagem = df_atualizado["Candidato"].value_counts().reset_index()
                 contagem.columns = ["Candidato", "Total de Votos"]
 
-                # Limpa e atualiza planilha de votos consolidados
+                # Limpa a planilha antes de atualizar
                 votos_sheet.clear()
+
+                # Reescreve o cabeçalho
                 votos_sheet.append_row(["Matricula", "Candidato", "Total de Votos"])
+
+                # Reescreve apenas os candidatos e totais (sem duplicar nomes)
                 for _, row in contagem.iterrows():
                     votos_sheet.append_row(["-", row["Candidato"], int(row["Total de Votos"])])
 
                 st.success(f"✅ Voto registrado com sucesso para {escolha}!")
+
             except Exception as e:
-                st.error(f"❌ Erro ao registrar voto: {e}")
+                st.error(f"Erro ao registrar voto: {e}")
