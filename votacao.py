@@ -132,15 +132,6 @@ if st.button("Votar"):
             except Exception as e:
                 st.error(f"Erro ao registrar voto: {e}")
 
-# ======== MOSTRAR RESUMO NA TELA ========
-votos_brutos = votos_brutos_sheet.get_all_records()
-df_brutos = pd.DataFrame(votos_brutos)
-if not df_brutos.empty:
-    contagem = df_brutos["Candidato"].value_counts().reset_index()
-    contagem.columns = ["Candidato", "Total de Votos"]
-    st.subheader("📊 Resultado Parcial")
-    st.table(contagem)
-
 # ======== BOTÃO PARA ATUALIZAR PLANILHA DE RESUMO ========
 if st.button("Atualizar aba Votos"):
     try:
