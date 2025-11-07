@@ -4,6 +4,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 import base64
 from streamlit import secrets
+import unicodedata
 
 # ======== FUNÇÃO DE FUNDO ========
 def set_background(image_file):
@@ -80,9 +81,43 @@ votos_sheet = sheet.worksheet("Votos")
 
 
 # ======== INTERFACE ========
-candidatos = candidatos_sheet.col_values(1)
+candidatos = candidatos_sheet.col_values(1) or []  # lista de candidatos
 matricula = st.text_input("Digite sua matrícula:")
 escolha = st.radio("Escolha seu candidato:", candidatos)
+
+
+# ======== FUNÇÕES AUXILIARES ========
+def normalize_col_name(col):
+    """Normaliza um nome de coluna e mapeia para os nomes esperados."""
+    s = col.strip()
+    s_ascii = unicodedata.normalize('NFKD', s).encode('ASCII', 'ignore').decode('utf-8').lower()
+    if "matric" in s_ascii:  # cobre matricula, matrícula, etc.
+        return "Matrículas"
+    if "candidat" in s_ascii:  # cobre candidato, candidatos, etc.
+        return "Candidato"
+    if "total" in s_ascii or "voto" in s_ascii:  # total de votos, votos
+        return "Total de Votos"
+    return s  # fallback: mantém original (apenas strip)
+
+
+def ensure_expected_columns(df):
+    """Garante que o DataFrame tenha as colunas: Matrículas, Candidato, Total de Votos."""
+    # Se df estiver vazio (sem colunas), cria com colunas esperadas
+    expected = ["Matrículas", "Candidato", "Total de Votos"]
+    if df.empty and df.columns.size == 0:
+        return pd.DataFrame(columns=expected)
+
+    # Normaliza nomes
+    new_cols = [normalize_col_name(col) for col in df.columns]
+    df.columns = new_cols
+
+    # Adiciona colunas faltantes com valores vazios
+    for col in expected:
+        if col not in df.columns:
+            df[col] = "" if col != "Total de Votos" else 0
+
+    # Reordena colunas para consistência
+    return df[expected]
 
 
 # ======== LÓGICA DE VOTO ========
@@ -92,27 +127,40 @@ if st.button("Votar"):
     else:
         # Lê todos os votos existentes
         votos_existentes = votos_sheet.get_all_records()
-        df_votos = pd.DataFrame(votos_existentes) if votos_existentes else pd.DataFrame(columns=["Matrículas", "Candidato", "Total de Votos"])
+        df_votos = pd.DataFrame(votos_existentes) if votos_existentes else pd.DataFrame()
 
-        # Garante que o nome da coluna esteja padronizado com acento
-        df_votos.columns = [col.strip().replace("Matriculas", "Matrículas") for col in df_votos.columns]
+        # Normaliza/garante colunas esperadas
+        df_votos = ensure_expected_columns(df_votos)
+
+        # --- DEBUG: exibe colunas e primeiras linhas (ajuda a ver o que veio da planilha) ---
+        st.write("Colunas após normalização:", df_votos.columns.tolist())
+        st.write("Primeiras linhas (preview):", df_votos.head())
 
         # Verifica se a matrícula já votou
-        if "Matrículas" in df_votos.columns:
-            ja_votou = df_votos["Matrículas"].astype(str).apply(lambda x: matricula in x.split(";")).any()
-        else:
-            st.error("Erro: coluna 'Matrículas' não encontrada na planilha de votos.")
+        # (Transforma para str para evitar problemas com NaN)
+        try:
+            ja_votou = df_votos["Matrículas"].astype(str).apply(lambda x: matricula in x.split(";") if x else False).any()
+        except Exception as e:
+            st.error(f"Erro ao verificar matrículas: {e}")
             st.stop()
 
         if ja_votou:
             st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
         else:
             # Se o candidato já existe, soma 1 e adiciona matrícula à lista
-            if escolha in df_votos["Candidato"].values:
+            try:
+                candidatos_existentes = df_votos["Candidato"].astype(str).values
+            except KeyError:
+                # caso improvável, garante coluna e segue
+                df_votos["Candidato"] = ""
+                candidatos_existentes = df_votos["Candidato"].astype(str).values
+
+            if escolha in candidatos_existentes:
                 idx = df_votos.index[df_votos["Candidato"] == escolha][0]
-                matriculas_antigas = df_votos.at[idx, "Matrículas"]
+                matriculas_antigas = str(df_votos.at[idx, "Matrículas"]) if df_votos.at[idx, "Matrículas"] is not None else ""
                 novas_matriculas = matriculas_antigas + ";" + matricula if matriculas_antigas else matricula
                 df_votos.at[idx, "Matrículas"] = novas_matriculas
+                # corrige caso Total de Votos venha como string
                 df_votos.at[idx, "Total de Votos"] = int(df_votos.at[idx, "Total de Votos"]) + 1
             else:
                 novo = pd.DataFrame({"Matrículas": [matricula], "Candidato": [escolha], "Total de Votos": [1]})
