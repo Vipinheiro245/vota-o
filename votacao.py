@@ -105,8 +105,8 @@ except Exception:
 try:
     votos_sheet = sheet.worksheet("Votos")
 except Exception:
-    votos_sheet = sheet.add_worksheet(title="Votos", rows="1000", cols="3")
-    votos_sheet.append_row(["Matriculas", "Candidato", "Total de Votos"])
+    votos_sheet = sheet.add_worksheet(title="Votos", rows="1000", cols="2")
+    votos_sheet.append_row(["Candidato", "Total de Votos"])
 
 # Lista de candidatos
 candidatos = candidatos_sheet.col_values(1)
@@ -127,8 +127,25 @@ if st.button("Votar"):
             st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
         else:
             try:
+                # Adiciona voto na aba Votos Brutos
                 votos_brutos_sheet.append_row([matricula, escolha])
+
+                # Recalcula contagem por candidato
+                votos_brutos = votos_brutos_sheet.get_all_records()
+                df_brutos = pd.DataFrame(votos_brutos)
+                contagem = df_brutos["Candidato"].value_counts().reset_index()
+                contagem.columns = ["Candidato", "Total de Votos"]
+
+                # Atualiza aba Votos (cada candidato aparece 1 vez com total)
+                dados_votos = [["Candidato", "Total de Votos"]]
+                for candidato in candidatos:
+                    total = contagem.loc[contagem["Candidato"] == candidato, "Total de Votos"]
+                    dados_votos.append([candidato, int(total.values[0]) if not total.empty else 0])
+
+                votos_sheet.update(f"A1:B{len(dados_votos)}", dados_votos)
+
                 st.success(f"✅ Voto registrado com sucesso para {escolha}!")
+
             except Exception as e:
                 st.error(f"Erro ao registrar voto: {e}")
 
