@@ -132,14 +132,3 @@ if st.button("Votar"):
             except Exception as e:
                 st.error(f"Erro ao registrar voto: {e}")
 
-# ======== BOTÃO PARA ATUALIZAR PLANILHA DE RESUMO ========
-if st.button("Atualizar aba Votos"):
-    try:
-        dados_votos = [["Matriculas", "Candidato", "Total de Votos"]]
-        for candidato in candidatos:
-            total = contagem.loc[contagem["Candidato"] == candidato, "Total de Votos"]
-            dados_votos.append(["", candidato, int(total.values[0]) if not total.empty else 0])
-        votos_sheet.update(f"A1:C{len(dados_votos)}", dados_votos)
-        st.success("✅ Aba 'Votos' atualizada com sucesso!")
-    except Exception as e:
-        st.error(f"Erro ao atualizar aba Votos: {e}")
