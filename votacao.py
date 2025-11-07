@@ -91,37 +91,40 @@ def inicializar_abas(sheet):
 
 # ======== FUNÇÃO PARA ATUALIZAR TOTALIZAÇÃO ========
 def atualizar_totalizacao(votos_sheet, totalizacao_sheet, candidatos):
-    """Atualiza a aba de totalização com a contagem de votos"""
+    """Atualiza a aba de totalização com a contagem de votos (sem duplicar linhas)."""
     try:
         # Lê todos os votos (exceto cabeçalho)
         votos = votos_sheet.get_all_records()
-        
+
         if votos:
             df_votos = pd.DataFrame(votos)
-            # Conta votos por candidato
+            # Conta os votos por candidato
             contagem = df_votos["Candidato"].value_counts().to_dict()
         else:
             contagem = {}
-        
+
         # Limpa a aba de totalização (mantém cabeçalho)
         totalizacao_sheet.clear()
         totalizacao_sheet.append_row(["Candidato", "Total de Votos"])
-        
-        # Adiciona todos os candidatos com suas contagens
+
+        # Remove duplicatas de nomes de candidatos
+        candidatos_unicos = list(dict.fromkeys([c.strip() for c in candidatos if c.strip()]))
+
+        # Cria lista com total de votos únicos por candidato
         dados_totalizacao = []
-        for candidato in candidatos:
-            if candidato.strip():  # Ignora linhas vazias
-                total = contagem.get(candidato, 0)
-                dados_totalizacao.append([candidato, total])
-        
+        for candidato in candidatos_unicos:
+            total = contagem.get(candidato, 0)
+            dados_totalizacao.append([candidato, total])
+
         # Ordena por total de votos (decrescente)
         dados_totalizacao.sort(key=lambda x: x[1], reverse=True)
-        
-        # Insere os dados
+
+        # Escreve no Google Sheets
         if dados_totalizacao:
             totalizacao_sheet.append_rows(dados_totalizacao)
-        
+
         return dados_totalizacao
+
     except Exception as e:
         st.error(f"Erro ao atualizar totalização: {e}")
         return []
