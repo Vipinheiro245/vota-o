@@ -98,7 +98,7 @@ candidatos_sheet = sheet.worksheet("Candidatos")
 try:
     votos_brutos_sheet = sheet.worksheet("Votos Brutos")
 except Exception:
-    votos_brutos_sheet = sheet.add_worksheet(title="Votos Brutos", rows="1000", cols="3")
+    votos_brutos_sheet = sheet.add_worksheet(title="Votos Brutos", rows="1000", cols="2")
     votos_brutos_sheet.append_row(["Matricula", "Candidato"])
 
 # aba de resumo consolidado
@@ -139,20 +139,16 @@ if st.button("Votar"):
                 # Remove duplicatas por segurança
                 df_brutos = df_brutos.drop_duplicates(subset=["Matricula"])
 
-                # Agrupa por candidato
-                grouped = df_brutos.groupby("Candidato")["Matricula"].apply(list).reset_index()
-                grouped["Total de Votos"] = grouped["Matricula"].apply(len)
-                grouped["Matriculas_str"] = grouped["Matricula"].apply(lambda l: ";".join(map(str, l)))
-                contagem_df = grouped[["Matriculas_str", "Candidato", "Total de Votos"]]
+                # Calcula total de votos por candidato
+                contagem = df_brutos["Candidato"].value_counts().reset_index()
+                contagem.columns = ["Candidato", "Total de Votos"]
 
-                # atualiza a aba "Votos" (resumo): limpa e escreve cabeçalho + linhas consolidadas
-                votos_sheet.clear()
-                votos_sheet.append_row(["Matriculas", "Candidato", "Total de Votos"])
-
-                # se contagem_df vazio, nada a adicionar além do cabeçalho
-                if not contagem_df.empty:
-                    for _, row in contagem_df.iterrows():
-                        votos_sheet.append_row([row["Matriculas_str"], row["Candidato"], int(row["Total de Votos"])])
+                # Atualiza apenas a coluna "Total de Votos" na aba "Votos"
+                for i, candidato in enumerate(candidatos, start=2):  # começa na linha 2 (cabeçalho)
+                    # procura total de votos para este candidato
+                    total = contagem.loc[contagem["Candidato"] == candidato, "Total de Votos"]
+                    votos_sheet.update_cell(i, 2, candidato)  # coluna B = Candidato
+                    votos_sheet.update_cell(i, 3, int(total.values[0]) if not total.empty else 0)  # coluna C = Total
 
                 st.success(f"✅ Voto registrado com sucesso para {escolha}!")
 
