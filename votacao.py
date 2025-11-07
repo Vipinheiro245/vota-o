@@ -120,7 +120,9 @@ if st.button("Votar"):
                 votos_brutos_sheet.append_row([matricula, escolha])
 
                 # Atualiza aba Votos (resumo)
-                contagem = df_brutos.append({"Matricula": matricula, "Candidato": escolha}, ignore_index=True)
+                novo_voto = pd.DataFrame([{"Matricula": matricula, "Candidato": escolha}])
+                contagem = pd.concat([df_brutos, novo_voto], ignore_index=True)
+
                 resumo = contagem["Candidato"].value_counts().reset_index()
                 resumo.columns = ["Candidato", "Total de Votos"]
 
