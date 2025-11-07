@@ -192,7 +192,7 @@ if st.button("Votar"):
                 totalizacao = atualizar_totalizacao(votos_sheet, totalizacao_sheet, candidatos)
                 
                 st.success(f"✅ Voto registrado com sucesso para **{escolha}**!")
-                st.balloons()
+           
                 
         except Exception as e:
             st.error(f"❌ Erro ao registrar voto: {e}")
