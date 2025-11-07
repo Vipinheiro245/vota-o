@@ -64,18 +64,28 @@ def set_background(image_file):
 set_background("polimeros.png")
 
 # ======== TÍTULO ========
-st.markdown("<h1 style='text-align: center; color: #FF6900; font-size: 40px;'>SISTEMA DE VOTAÇÃO</h1>", unsafe_allow_html=True)
+st.markdown(
+    "<h1 style='text-align: center; color: #FF6900; font-size: 40px;'>SISTEMA DE VOTAÇÃO</h1>",
+    unsafe_allow_html=True,
+)
 
 # ======== INTRODUÇÃO ========
-st.markdown("""
+st.markdown(
+    """
 <div style='text-align: center; font-size: 20px; color: #333; margin-top: 10px;'>
 Bem-vindo ao Sistema de Votação - Café com Gestor.
-""", unsafe_allow_html=True)
+</div>
+""",
+    unsafe_allow_html=True,
+)
 
 st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
 
 # ======== AUTENTICAÇÃO GOOGLE SHEETS ========
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+scope = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/drive",
+]
 creds_dict = secrets["google"]
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
@@ -108,35 +118,36 @@ escolha = st.radio("Escolha seu candidato:", candidatos)
 # ======== LÓGICA DE VOTO ========
 if st.button("Votar"):
     if not matricula.strip():
-        st.error("⚠️ Por favor, informe sua matrícula antes de votar.")
+        st.error("Por favor, informe sua matrícula.")
     else:
-        # Lê votos anteriores (histórico)
-        votos_existentes = votos_brutos_sheet.get_all_records()
-        df_votos = pd.DataFrame(votos_existentes) if votos_existentes else pd.DataFrame(columns=["Matricula", "Candidato"])
+        votos_brutos = votos_brutos_sheet.get_all_records()
+        df_brutos = pd.DataFrame(votos_brutos) if votos_brutos else pd.DataFrame(columns=["Matricula", "Candidato"])
 
-        # Verifica se matrícula já votou
-        if matricula in df_votos["Matricula"].astype(str).values:
+        if matricula in df_brutos["Matricula"].astype(str).values:
             st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
         else:
             try:
-                # Adiciona voto ao histórico
+                # Adiciona voto na aba Votos Brutos
                 votos_brutos_sheet.append_row([matricula, escolha])
 
-                # Atualiza contagem consolidada
-                votos_atualizados = votos_brutos_sheet.get_all_records()
-                df_atualizado = pd.DataFrame(votos_atualizados)
+                # Atualiza aba Votos
+                votos_data = votos_sheet.get_all_values()
+                df_votos = pd.DataFrame(votos_data[1:], columns=votos_data[0])  # ignora cabeçalho
 
-                contagem = df_atualizado["Candidato"].value_counts().reset_index()
-                contagem.columns = ["Candidato", "Total de Votos"]
+                # Verifica se candidato já existe na aba Votos
+                candidato_existente = False
+                for idx, row in df_votos.iterrows():
+                    if row["Candidato"] == escolha:
+                        candidato_existente = True
+                        novo_total = int(row["Total de Votos"]) + 1
+                        votos_sheet.update_cell(idx + 2, 3, novo_total)  # coluna C
+                        break
 
-                # Limpa e atualiza planilha de votos consolidados
-                votos_sheet.clear()
-                votos_sheet.append_row(["Matricula", "Candidato", "Total de Votos"])
-                for _, row in contagem.iterrows():
-                    votos_sheet.append_row(["-", row["Candidato"], int(row["Total de Votos"])])
+                # Se não existe, cria nova linha com total = 1
+                if not candidato_existente:
+                    votos_sheet.append_row(["-", escolha, 1])
 
                 st.success(f"✅ Voto registrado com sucesso para {escolha}!")
+
             except Exception as e:
-                st.error(f"❌ Erro ao registrar voto: {e}")
-
-
+                st.error(f"Erro ao registrar voto: {e}")
