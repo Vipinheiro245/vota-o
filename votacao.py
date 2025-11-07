@@ -124,7 +124,7 @@ if st.button("Votar"):
         df_brutos = pd.DataFrame(votos_brutos)
 
         # Garante colunas mesmo se vazio
-        if df_brutos.empty:
+        if df_brutos.empty or "Matricula" not in df_brutos.columns:
             df_brutos = pd.DataFrame(columns=["Matricula", "Candidato"])
 
         if matricula in df_brutos["Matricula"].astype(str).values:
@@ -139,7 +139,7 @@ if st.button("Votar"):
                 df_votos = pd.DataFrame(votos_data[1:], columns=votos_data[0])  # ignora cabeçalho
 
                 # Garante colunas mesmo se vazio
-                if df_votos.empty:
+                if df_votos.empty or "Candidato" not in df_votos.columns:
                     df_votos = pd.DataFrame(columns=["Matricula", "Candidato", "Total de Votos"])
 
                 # Verifica se candidato já existe na aba Votos
