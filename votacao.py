@@ -121,7 +121,11 @@ if st.button("Votar"):
         st.error("Por favor, informe sua matrícula.")
     else:
         votos_brutos = votos_brutos_sheet.get_all_records()
-        df_brutos = pd.DataFrame(votos_brutos) if votos_brutos else pd.DataFrame(columns=["Matricula", "Candidato"])
+        df_brutos = pd.DataFrame(votos_brutos)
+
+        # Garante colunas mesmo se vazio
+        if df_brutos.empty:
+            df_brutos = pd.DataFrame(columns=["Matricula", "Candidato"])
 
         if matricula in df_brutos["Matricula"].astype(str).values:
             st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
@@ -133,6 +137,10 @@ if st.button("Votar"):
                 # Atualiza aba Votos
                 votos_data = votos_sheet.get_all_values()
                 df_votos = pd.DataFrame(votos_data[1:], columns=votos_data[0])  # ignora cabeçalho
+
+                # Garante colunas mesmo se vazio
+                if df_votos.empty:
+                    df_votos = pd.DataFrame(columns=["Matricula", "Candidato", "Total de Votos"])
 
                 # Verifica se candidato já existe na aba Votos
                 candidato_existente = False
