@@ -89,5 +89,53 @@ candidatos = candidatos_sheet.col_values(1)
 matricula = st.text_input("Digite sua matrícula:")
 escolha = st.radio("Escolha seu candidato:", candidatos)
 
-if st
+if st.button("Votar"):
+    if not matricula.strip():
+        st.error("Por favor, informe sua matrícula.")
+    else:
+        votos = votos_sheet.get_all_records()
+        df_votos = pd.DataFrame(votos) if votos else pd.DataFrame(columns=["Matricula", "Candidato"])
 
+        if matricula in df_votos["Matricula"].astype(str).values:
+            st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
+        else:
+            try:
+                # Adiciona o voto
+                votos_sheet.append_row([matricula, escolha])
+
+                # Atualiza contagem na coluna 3 (Total de Votos)
+                votos_atualizados = votos_sheet.get_all_records()
+                df_atualizado = pd.DataFrame(votos_atualizados)
+                contagem = df_atualizado["Candidato"].value_counts().to_dict()
+
+                # Atualiza tudo de uma vez
+                updates = []
+                for i, candidato in enumerate(df_atualizado["Candidato"], start=2):
+                    updates.append({
+                        "range": f"C{i}",
+                        "values": [[contagem.get(candidato, 0)]]
+                    })
+                votos_sheet.batch_update([{"range": u["range"], "values": u["values"]} for u in updates])
+
+                st.success(f"✅ Voto registrado com sucesso para {escolha}!")
+
+            except Exception as e:
+                st.error(f"Erro ao registrar voto: {e}")
+
+# ======== AGRUPAMENTO DE CONTAGEM DE VOTOS ========
+st.markdown("---")
+st.markdown("<h2 style='text-align:center; color:#FF6900;'>📊 Resultado Parcial</h2>", unsafe_allow_html=True)
+
+try:
+    votos_data = votos_sheet.get_all_records()
+    if votos_data:
+        df_resultado = pd.DataFrame(votos_data)
+        contagem = df_resultado["Candidato"].value_counts().reset_index()
+        contagem.columns = ["Candidato", "Total de Votos"]
+
+        st.bar_chart(contagem.set_index("Candidato"))
+        st.dataframe(contagem)
+    else:
+        st.info("Nenhum voto registrado ainda.")
+except Exception as e:
+    st.error(f"Erro ao carregar contagem de votos: {e}")
