@@ -58,81 +58,195 @@ def set_background(image_file):
         """
         st.markdown(css, unsafe_allow_html=True)
     except FileNotFoundError:
-        st.error("⚠️ Arquivo 'polimeros.png' não encontrado!")
+        st.warning("⚠️ Arquivo 'polimeros.png' não encontrado! Usando estilo padrão.")
+
+# ======== FUNÇÃO PARA INICIALIZAR ABAS ========
+def inicializar_abas(sheet):
+    """Garante que as abas necessárias existam com cabeçalhos corretos"""
+    try:
+        # Usa aba Votos (já existe)
+        try:
+            votos_sheet = sheet.worksheet("Votos")
+            # Verifica se tem cabeçalho
+            if not votos_sheet.row_values(1):
+                votos_sheet.append_row(["Matricula", "Candidato", "Data/Hora"])
+        except gspread.WorksheetNotFound:
+            votos_sheet = sheet.add_worksheet(title="Votos", rows="1000", cols="3")
+            votos_sheet.append_row(["Matricula", "Candidato", "Data/Hora"])
+        
+        # Verifica/cria aba Totalização
+        try:
+            totalizacao_sheet = sheet.worksheet("Totalizacao")
+            # Verifica se tem cabeçalho
+            if not totalizacao_sheet.row_values(1):
+                totalizacao_sheet.append_row(["Candidato", "Total de Votos"])
+        except gspread.WorksheetNotFound:
+            totalizacao_sheet = sheet.add_worksheet(title="Totalizacao", rows="100", cols="2")
+            totalizacao_sheet.append_row(["Candidato", "Total de Votos"])
+        
+        return votos_sheet, totalizacao_sheet
+    except Exception as e:
+        st.error(f"Erro ao inicializar abas: {e}")
+        return None, None
+
+# ======== FUNÇÃO PARA ATUALIZAR TOTALIZAÇÃO ========
+def atualizar_totalizacao(votos_sheet, totalizacao_sheet, candidatos):
+    """Atualiza a aba de totalização com a contagem de votos"""
+    try:
+        # Lê todos os votos (exceto cabeçalho)
+        votos = votos_sheet.get_all_records()
+        
+        if votos:
+            df_votos = pd.DataFrame(votos)
+            # Conta votos por candidato
+            contagem = df_votos["Candidato"].value_counts().to_dict()
+        else:
+            contagem = {}
+        
+        # Limpa a aba de totalização (mantém cabeçalho)
+        totalizacao_sheet.clear()
+        totalizacao_sheet.append_row(["Candidato", "Total de Votos"])
+        
+        # Adiciona todos os candidatos com suas contagens
+        dados_totalizacao = []
+        for candidato in candidatos:
+            if candidato.strip():  # Ignora linhas vazias
+                total = contagem.get(candidato, 0)
+                dados_totalizacao.append([candidato, total])
+        
+        # Ordena por total de votos (decrescente)
+        dados_totalizacao.sort(key=lambda x: x[1], reverse=True)
+        
+        # Insere os dados
+        if dados_totalizacao:
+            totalizacao_sheet.append_rows(dados_totalizacao)
+        
+        return dados_totalizacao
+    except Exception as e:
+        st.error(f"Erro ao atualizar totalização: {e}")
+        return []
 
 # ======== CHAMA O FUNDO ========
 set_background("polimeros.png")
 
 # ======== TÍTULO ========
-st.markdown("<h1 style='text-align: center; color: #FF6900; font-size: 40px;'>SISTEMA DE VOTAÇÃO</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #FF6900; font-size: 40px;'>SISTEMA DE VOTAÇÃO</h1>", 
+            unsafe_allow_html=True)
 
 # ======== INTRODUÇÃO ========
-st.markdown("<div style='text-align: center; font-size: 20px; color: #333; margin-top: 10px;'>Bem-vindo ao Sistema de Votação - Café com Gestor.</div>", unsafe_allow_html=True)
+st.markdown("""
+<div style='text-align: center; font-size: 20px; color: #333; margin-top: 10px;'>
+    Bem-vindo ao Sistema de Votação - Café com Gestor.
+</div>
+""", unsafe_allow_html=True)
+
 st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
 
 # ======== AUTENTICAÇÃO GOOGLE SHEETS ========
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds_dict = secrets["google"]
-creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
-client = gspread.authorize(creds)
-
-# Nome do arquivo e abas
-sheet = client.open("vota-o-phayton@firm-mariner-397622.iam.gserviceaccount.com")
-candidatos_sheet = sheet.worksheet("Candidatos")
-
-# Aba para votos brutos (histórico)
 try:
-    votos_brutos_sheet = sheet.worksheet("Votos Brutos")
-except Exception:
-    votos_brutos_sheet = sheet.add_worksheet(title="Votos Brutos", rows="1000", cols="2")
-    votos_brutos_sheet.append_row(["Matricula", "Candidato"])
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds_dict = secrets["google"]
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+    client = gspread.authorize(creds)
+    
+    # Abre a planilha
+    sheet = client.open("vota-o-phayton@firm-mariner-397622.iam.gserviceaccount.com")
+    
+    # Inicializa as abas
+    votos_sheet, totalizacao_sheet = inicializar_abas(sheet)
+    
+    if votos_sheet is None or totalizacao_sheet is None:
+        st.error("Erro ao inicializar planilhas. Verifique as permissões.")
+        st.stop()
+    
+    # Carrega lista de candidatos
+    candidatos_sheet = sheet.worksheet("Candidatos")
+    candidatos = [c for c in candidatos_sheet.col_values(1) if c.strip()]
+    
+except Exception as e:
+    st.error(f"Erro ao conectar com Google Sheets: {e}")
+    st.stop()
 
-# Aba para resumo
-try:
-    votos_sheet = sheet.worksheet("Votos")
-except Exception:
-    votos_sheet = sheet.add_worksheet(title="Votos", rows="1000", cols="2")
-    votos_sheet.append_row(["Candidato", "Total de Votos"])
-
-# Lista de candidatos
-candidatos = candidatos_sheet.col_values(1)
-
-# ======== FORMULÁRIO ========
+# ======== FORMULÁRIO DE VOTAÇÃO ========
 matricula = st.text_input("Digite sua matrícula:")
 escolha = st.radio("Escolha seu candidato:", candidatos)
 
-# ======== LÓGICA DE VOTO ========
 if st.button("Votar"):
     if not matricula.strip():
-        st.error("Por favor, informe sua matrícula.")
+        st.error("⚠️ Por favor, informe sua matrícula.")
     else:
-        # Verifica na aba Votos Brutos se já votou
-        votos_brutos = votos_brutos_sheet.get_all_records()
-        df_brutos = pd.DataFrame(votos_brutos)
-        if df_brutos.empty or "Matricula" not in df_brutos.columns:
-            df_brutos = pd.DataFrame(columns=["Matricula", "Candidato"])
+        try:
+            # Verifica se a matrícula já votou
+            votos = votos_sheet.get_all_records()
+            df_votos = pd.DataFrame(votos) if votos else pd.DataFrame(columns=["Matricula", "Candidato", "Data/Hora"])
+            
+            if matricula in df_votos["Matricula"].astype(str).values:
+                st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
+            else:
+                # Registra o voto na aba Votos
+                from datetime import datetime
+                data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                votos_sheet.append_row([matricula, escolha, data_hora])
+                
+                # Atualiza a totalização
+                totalizacao = atualizar_totalizacao(votos_sheet, totalizacao_sheet, candidatos)
+                
+                st.success(f"✅ Voto registrado com sucesso para **{escolha}**!")
+                st.balloons()
+                
+        except Exception as e:
+            st.error(f"❌ Erro ao registrar voto: {e}")
 
-        if matricula in df_brutos["Matricula"].astype(str).values:
-            st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
-        else:
-            try:
-                # Adiciona voto na aba Votos Brutos
-                votos_brutos_sheet.append_row([matricula, escolha])
+# ======== EXIBIR TOTALIZAÇÃO ========
+st.markdown("<div style='margin-top: 50px;'></div>", unsafe_allow_html=True)
+st.markdown("<h2 style='text-align: center; color: #FF6900;'>📊 Totalização dos Votos</h2>", 
+            unsafe_allow_html=True)
 
-                # Atualiza aba Votos (resumo)
-                novo_voto = pd.DataFrame([{"Matricula": matricula, "Candidato": escolha}])
-                contagem = pd.concat([df_brutos, novo_voto], ignore_index=True)
+try:
+    # Carrega e exibe a totalização
+    totalizacao_data = totalizacao_sheet.get_all_records()
+    
+    if totalizacao_data:
+        df_totalizacao = pd.DataFrame(totalizacao_data)
+        
+        # Exibe como tabela estilizada
+        st.markdown("""
+        <style>
+        .dataframe {
+            font-size: 18px;
+            text-align: center;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        st.dataframe(
+            df_totalizacao,
+            use_container_width=True,
+            hide_index=True
+        )
+        
+        # Exibe gráfico de barras
+        if not df_totalizacao.empty:
+            st.bar_chart(df_totalizacao.set_index("Candidato")["Total de Votos"])
+            
+            # Mostra o vencedor
+            vencedor = df_totalizacao.iloc[0]
+            if vencedor["Total de Votos"] > 0:
+                st.markdown(f"""
+                <div style='text-align: center; margin-top: 30px; padding: 20px; 
+                background-color: #FF6900; color: white; border-radius: 10px;'>
+                    <h3>🏆 Candidato com mais votos: {vencedor['Candidato']}</h3>
+                    <p style='font-size: 24px; font-weight: bold;'>{vencedor['Total de Votos']} votos</p>
+                </div>
+                """, unsafe_allow_html=True)
+    else:
+        st.info("Ainda não há votos registrados.")
+        
+except Exception as e:
+    st.error(f"Erro ao carregar totalização: {e}")
 
-                resumo = contagem["Candidato"].value_counts().reset_index()
-                resumo.columns = ["Candidato", "Total de Votos"]
+# ======== BOTÃO PARA ATUALIZAR ========
+st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
+if st.button("🔄 Atualizar Resultados"):
+    st.rerun()
 
-                # Limpa e reescreve resumo
-                votos_sheet.clear()
-                votos_sheet.append_row(["Candidato", "Total de Votos"])
-                for _, row in resumo.iterrows():
-                    votos_sheet.append_row([row["Candidato"], int(row["Total de Votos"])])
-
-                st.success(f"✅ Voto registrado com sucesso para {escolha}!")
-
-            except Exception as e:
-                st.error(f"Erro ao registrar voto: {e}")
