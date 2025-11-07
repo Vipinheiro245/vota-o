@@ -64,28 +64,18 @@ def set_background(image_file):
 set_background("polimeros.png")
 
 # ======== TÍTULO ========
-st.markdown(
-    "<h1 style='text-align: center; color: #FF6900; font-size: 40px;'>SISTEMA DE VOTAÇÃO</h1>",
-    unsafe_allow_html=True,
-)
+st.markdown("<h1 style='text-align: center; color: #FF6900; font-size: 40px;'>SISTEMA DE VOTAÇÃO</h1>", unsafe_allow_html=True)
 
 # ======== INTRODUÇÃO ========
-st.markdown(
-    """
+st.markdown("""
 <div style='text-align: center; font-size: 20px; color: #333; margin-top: 10px;'>
 Bem-vindo ao Sistema de Votação - Café com Gestor.
-</div>
-""",
-    unsafe_allow_html=True,
-)
+""", unsafe_allow_html=True)
 
 st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
 
 # ======== AUTENTICAÇÃO GOOGLE SHEETS ========
-scope = [
-    "https://spreadsheets.google.com/feeds",
-    "https://www.googleapis.com/auth/drive",
-]
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds_dict = secrets["google"]
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
@@ -105,8 +95,8 @@ except Exception:
 try:
     votos_sheet = sheet.worksheet("Votos")
 except Exception:
-    votos_sheet = sheet.add_worksheet(title="Votos", rows="1000", cols="2")
-    votos_sheet.append_row(["Candidato", "Total de Votos"])
+    votos_sheet = sheet.add_worksheet(title="Votos", rows="1000", cols="3")
+    votos_sheet.append_row(["Matricula", "Candidato", "Total de Votos"])
 
 # Lista de candidatos
 candidatos = candidatos_sheet.col_values(1)
@@ -118,34 +108,35 @@ escolha = st.radio("Escolha seu candidato:", candidatos)
 # ======== LÓGICA DE VOTO ========
 if st.button("Votar"):
     if not matricula.strip():
-        st.error("Por favor, informe sua matrícula.")
+        st.error("⚠️ Por favor, informe sua matrícula antes de votar.")
     else:
-        votos_brutos = votos_brutos_sheet.get_all_records()
-        df_brutos = pd.DataFrame(votos_brutos) if votos_brutos else pd.DataFrame(columns=["Matricula", "Candidato"])
+        # Lê votos anteriores (histórico)
+        votos_existentes = votos_brutos_sheet.get_all_records()
+        df_votos = pd.DataFrame(votos_existentes) if votos_existentes else pd.DataFrame(columns=["Matricula", "Candidato"])
 
-        if matricula in df_brutos["Matricula"].astype(str).values:
+        # Verifica se matrícula já votou
+        if matricula in df_votos["Matricula"].astype(str).values:
             st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
         else:
             try:
-                # Adiciona voto na aba Votos Brutos
+                # Adiciona voto ao histórico
                 votos_brutos_sheet.append_row([matricula, escolha])
 
-                # Recalcula contagem por candidato
-                votos_brutos = votos_brutos_sheet.get_all_records()
-                df_brutos = pd.DataFrame(votos_brutos)
-                contagem = df_brutos["Candidato"].value_counts().reset_index()
+                # Atualiza contagem consolidada
+                votos_atualizados = votos_brutos_sheet.get_all_records()
+                df_atualizado = pd.DataFrame(votos_atualizados)
+
+                contagem = df_atualizado["Candidato"].value_counts().reset_index()
                 contagem.columns = ["Candidato", "Total de Votos"]
 
-                # Atualiza aba Votos (cada candidato aparece 1 vez com total)
-                dados_votos = [["Candidato", "Total de Votos"]]
-                for candidato in candidatos:
-                    total = contagem.loc[contagem["Candidato"] == candidato, "Total de Votos"]
-                    dados_votos.append([candidato, int(total.values[0]) if not total.empty else 0])
-
-                votos_sheet.update(f"A1:B{len(dados_votos)}", dados_votos)
+                # Limpa e atualiza planilha de votos consolidados
+                votos_sheet.clear()
+                votos_sheet.append_row(["Matricula", "Candidato", "Total de Votos"])
+                for _, row in contagem.iterrows():
+                    votos_sheet.append_row(["-", row["Candidato"], int(row["Total de Votos"])])
 
                 st.success(f"✅ Voto registrado com sucesso para {escolha}!")
-
             except Exception as e:
-                st.error(f"Erro ao registrar voto: {e}")
+                st.error(f"❌ Erro ao registrar voto: {e}")
+
 
