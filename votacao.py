@@ -180,12 +180,4 @@ if st.button("Votar"):
             except Exception as e:
                 st.error(f"❌ Erro ao registrar voto: {e}")
 
-# ======== Exibição opcional do resumo no app ========
-try:
-    resumo = votos_sheet.get_all_records()
-    if resumo:
-        df_resumo = pd.DataFrame(resumo)
-        st.markdown("### Resumo de Votos")
-        st.dataframe(df_resumo)
-except Exception:
-    pass
+
