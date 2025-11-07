@@ -120,37 +120,35 @@ if st.button("Votar"):
     if not matricula.strip():
         st.error("Por favor, informe sua matrícula.")
     else:
-        # pega votos brutos (histórico)
         votos_brutos = votos_brutos_sheet.get_all_records()
         df_brutos = pd.DataFrame(votos_brutos) if votos_brutos else pd.DataFrame(columns=["Matricula", "Candidato"])
 
-        # verifica se matrícula já votou
         if matricula in df_brutos["Matricula"].astype(str).values:
             st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
         else:
             try:
-                # adiciona o voto bruto (histórico)
                 votos_brutos_sheet.append_row([matricula, escolha])
-
-                # re-lê o histórico e consolida
-                votos_brutos = votos_brutos_sheet.get_all_records()
-                df_brutos = pd.DataFrame(votos_brutos)
-
-                # Remove duplicatas por segurança
-                df_brutos = df_brutos.drop_duplicates(subset=["Matricula"])
-
-                # Calcula total de votos por candidato
-                contagem = df_brutos["Candidato"].value_counts().reset_index()
-                contagem.columns = ["Candidato", "Total de Votos"]
-
-                # Atualiza apenas a coluna "Total de Votos" na aba "Votos"
-                for i, candidato in enumerate(candidatos, start=2):  # começa na linha 2 (cabeçalho)
-                    # procura total de votos para este candidato
-                    total = contagem.loc[contagem["Candidato"] == candidato, "Total de Votos"]
-                    votos_sheet.update_cell(i, 2, candidato)  # coluna B = Candidato
-                    votos_sheet.update_cell(i, 3, int(total.values[0]) if not total.empty else 0)  # coluna C = Total
-
                 st.success(f"✅ Voto registrado com sucesso para {escolha}!")
-
             except Exception as e:
                 st.error(f"Erro ao registrar voto: {e}")
+
+# ======== MOSTRAR RESUMO NA TELA ========
+votos_brutos = votos_brutos_sheet.get_all_records()
+df_brutos = pd.DataFrame(votos_brutos)
+if not df_brutos.empty:
+    contagem = df_brutos["Candidato"].value_counts().reset_index()
+    contagem.columns = ["Candidato", "Total de Votos"]
+    st.subheader("📊 Resultado Parcial")
+    st.table(contagem)
+
+# ======== BOTÃO PARA ATUALIZAR PLANILHA DE RESUMO ========
+if st.button("Atualizar aba Votos"):
+    try:
+        dados_votos = [["Matriculas", "Candidato", "Total de Votos"]]
+        for candidato in candidatos:
+            total = contagem.loc[contagem["Candidato"] == candidato, "Total de Votos"]
+            dados_votos.append(["", candidato, int(total.values[0]) if not total.empty else 0])
+        votos_sheet.update(f"A1:C{len(dados_votos)}", dados_votos)
+        st.success("✅ Aba 'Votos' atualizada com sucesso!")
+    except Exception as e:
+        st.error(f"Erro ao atualizar aba Votos: {e}")
