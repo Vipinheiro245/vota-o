@@ -136,16 +136,14 @@ if st.button("Votar"):
                 votos_brutos = votos_brutos_sheet.get_all_records()
                 df_brutos = pd.DataFrame(votos_brutos)
 
-                # se não houver votos, cria df vazio com colunas corretas
-                if df_brutos.empty:
-                    contagem_df = pd.DataFrame(columns=["Candidato", "Matriculas_str", "Total de Votos"])
-                else:
-                    # agrupa por candidato e cria lista de matriculas
-                    grouped = df_brutos.groupby("Candidato")["Matricula"].apply(list).reset_index()
-                    grouped["Total de Votos"] = grouped["Matricula"].apply(len)
-                    # transforma lista de matriculas em string (separador ;)
-                    grouped["Matriculas_str"] = grouped["Matricula"].apply(lambda l: ";".join(map(str, l)))
-                    contagem_df = grouped[["Candidato", "Matriculas_str", "Total de Votos"]]
+                # Remove duplicatas por segurança
+                df_brutos = df_brutos.drop_duplicates(subset=["Matricula"])
+
+                # Agrupa por candidato
+                grouped = df_brutos.groupby("Candidato")["Matricula"].apply(list).reset_index()
+                grouped["Total de Votos"] = grouped["Matricula"].apply(len)
+                grouped["Matriculas_str"] = grouped["Matricula"].apply(lambda l: ";".join(map(str, l)))
+                contagem_df = grouped[["Matriculas_str", "Candidato", "Total de Votos"]]
 
                 # atualiza a aba "Votos" (resumo): limpa e escreve cabeçalho + linhas consolidadas
                 votos_sheet.clear()
@@ -160,5 +158,4 @@ if st.button("Votar"):
 
             except Exception as e:
                 st.error(f"Erro ao registrar voto: {e}")
-
 
