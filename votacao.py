@@ -64,18 +64,28 @@ def set_background(image_file):
 set_background("polimeros.png")
 
 # ======== TÍTULO ========
-st.markdown("<h1 style='text-align: center; color: #FF6900; font-size: 40px;'>SISTEMA DE VOTAÇÃO</h1>", unsafe_allow_html=True)
+st.markdown(
+    "<h1 style='text-align: center; color: #FF6900; font-size: 40px;'>SISTEMA DE VOTAÇÃO</h1>",
+    unsafe_allow_html=True,
+)
 
 # ======== INTRODUÇÃO ========
-st.markdown("""
+st.markdown(
+    """
 <div style='text-align: center; font-size: 20px; color: #333; margin-top: 10px;'>
 Bem-vindo ao Sistema de Votação - Café com Gestor.
-""", unsafe_allow_html=True)
+</div>
+""",
+    unsafe_allow_html=True,
+)
 
 st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
 
 # ======== AUTENTICAÇÃO GOOGLE SHEETS ========
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+scope = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/drive",
+]
 creds_dict = secrets["google"]
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
@@ -83,7 +93,20 @@ client = gspread.authorize(creds)
 # Nome do arquivo e abas
 sheet = client.open("vota-o-phayton@firm-mariner-397622.iam.gserviceaccount.com")
 candidatos_sheet = sheet.worksheet("Candidatos")
-votos_sheet = sheet.worksheet("Votos")
+
+# tenta obter a aba "Votos Brutos" (histórico), se não existir cria
+try:
+    votos_brutos_sheet = sheet.worksheet("Votos Brutos")
+except Exception:
+    votos_brutos_sheet = sheet.add_worksheet(title="Votos Brutos", rows="1000", cols="3")
+    votos_brutos_sheet.append_row(["Matricula", "Candidato"])
+
+# aba de resumo consolidado
+try:
+    votos_sheet = sheet.worksheet("Votos")
+except Exception:
+    votos_sheet = sheet.add_worksheet(title="Votos", rows="1000", cols="3")
+    votos_sheet.append_row(["Matriculas", "Candidato", "Total de Votos"])
 
 # Lista de candidatos
 candidatos = candidatos_sheet.col_values(1)
@@ -97,35 +120,45 @@ if st.button("Votar"):
     if not matricula.strip():
         st.error("Por favor, informe sua matrícula.")
     else:
-        votos = votos_sheet.get_all_records()
-        df_votos = pd.DataFrame(votos) if votos else pd.DataFrame(columns=["Matricula", "Candidato", "Total de Votos"])
-        
-        if matricula in df_votos["Matricula"].astype(str).values:
+        # pega votos brutos (histórico)
+        votos_brutos = votos_brutos_sheet.get_all_records()
+        df_brutos = pd.DataFrame(votos_brutos) if votos_brutos else pd.DataFrame(columns=["Matricula", "Candidato"])
+
+        # verifica se matrícula já votou
+        if matricula in df_brutos["Matricula"].astype(str).values:
             st.warning("⚠️ Você já votou! Cada matrícula só pode votar uma vez.")
         else:
             try:
-                # Adiciona o voto bruto
-                votos_sheet.append_row([matricula, escolha])
+                # adiciona o voto bruto (histórico)
+                votos_brutos_sheet.append_row([matricula, escolha])
 
-                # Atualiza a contagem consolidada
-                votos_atualizados = votos_sheet.get_all_records()
-                df_atualizado = pd.DataFrame(votos_atualizados)
+                # re-lê o histórico e consolida
+                votos_brutos = votos_brutos_sheet.get_all_records()
+                df_brutos = pd.DataFrame(votos_brutos)
 
-                # Agrupa os votos por candidato
-                contagem = df_atualizado["Candidato"].value_counts().reset_index()
-                contagem.columns = ["Candidato", "Total de Votos"]
+                # se não houver votos, cria df vazio com colunas corretas
+                if df_brutos.empty:
+                    contagem_df = pd.DataFrame(columns=["Candidato", "Matriculas_str", "Total de Votos"])
+                else:
+                    # agrupa por candidato e cria lista de matriculas
+                    grouped = df_brutos.groupby("Candidato")["Matricula"].apply(list).reset_index()
+                    grouped["Total de Votos"] = grouped["Matricula"].apply(len)
+                    # transforma lista de matriculas em string (separador ;)
+                    grouped["Matriculas_str"] = grouped["Matricula"].apply(lambda l: ";".join(map(str, l)))
+                    contagem_df = grouped[["Candidato", "Matriculas_str", "Total de Votos"]]
 
-                # Limpa a planilha antes de atualizar
+                # atualiza a aba "Votos" (resumo): limpa e escreve cabeçalho + linhas consolidadas
                 votos_sheet.clear()
+                votos_sheet.append_row(["Matriculas", "Candidato", "Total de Votos"])
 
-                # Reescreve o cabeçalho
-                votos_sheet.append_row(["Matricula", "Candidato", "Total de Votos"])
-
-                # Reescreve apenas os candidatos e totais (sem duplicar nomes)
-                for _, row in contagem.iterrows():
-                    votos_sheet.append_row(["-", row["Candidato"], int(row["Total de Votos"])])
+                # se contagem_df vazio, nada a adicionar além do cabeçalho
+                if not contagem_df.empty:
+                    for _, row in contagem_df.iterrows():
+                        votos_sheet.append_row([row["Matriculas_str"], row["Candidato"], int(row["Total de Votos"])])
 
                 st.success(f"✅ Voto registrado com sucesso para {escolha}!")
 
             except Exception as e:
                 st.error(f"Erro ao registrar voto: {e}")
+
+
