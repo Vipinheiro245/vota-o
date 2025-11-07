@@ -104,12 +104,12 @@ if st.button("Votar"):
                 df_votos.at[idx, "Matriculas"] = novas_matriculas
                 df_votos.at[idx, "Total de Votos"] = int(df_votos.at[idx, "Total de Votos"]) + 1
             else:
-                novo = pd.DataFrame({"Matriculas": [matricula], "Candidato": [escolha], "Total de Votos": [1]})
+                novo = pd.DataFrame({"Matrículas": [matrícula], "Candidato": [escolha], "Total de Votos": [1]})
                 df_votos = pd.concat([df_votos, novo], ignore_index=True)
 
             # Limpa e atualiza a planilha
             votos_sheet.clear()
-            votos_sheet.append_row(["Matriculas", "Candidato", "Total de Votos"])
+            votos_sheet.append_row(["Matrículas", "Candidato", "Total de Votos"])
             for _, row in df_votos.iterrows():
                 votos_sheet.append_row([row["Matriculas"], row["Candidato"], int(row["Total de Votos"])])
 
