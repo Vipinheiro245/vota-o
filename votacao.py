@@ -197,56 +197,5 @@ if st.button("Votar"):
         except Exception as e:
             st.error(f"❌ Erro ao registrar voto: {e}")
 
-# ======== EXIBIR TOTALIZAÇÃO ========
-st.markdown("<div style='margin-top: 50px;'></div>", unsafe_allow_html=True)
-st.markdown("<h2 style='text-align: center; color: #FF6900;'>📊 Totalização dos Votos</h2>", 
-            unsafe_allow_html=True)
-
-try:
-    # Carrega e exibe a totalização
-    totalizacao_data = totalizacao_sheet.get_all_records()
-    
-    if totalizacao_data:
-        df_totalizacao = pd.DataFrame(totalizacao_data)
-        
-        # Exibe como tabela estilizada
-        st.markdown("""
-        <style>
-        .dataframe {
-            font-size: 18px;
-            text-align: center;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-        
-        st.dataframe(
-            df_totalizacao,
-            use_container_width=True,
-            hide_index=True
-        )
-        
-        # Exibe gráfico de barras
-        if not df_totalizacao.empty:
-            st.bar_chart(df_totalizacao.set_index("Candidato")["Total de Votos"])
-            
-            # Mostra o vencedor
-            vencedor = df_totalizacao.iloc[0]
-            if vencedor["Total de Votos"] > 0:
-                st.markdown(f"""
-                <div style='text-align: center; margin-top: 30px; padding: 20px; 
-                background-color: #FF6900; color: white; border-radius: 10px;'>
-                    <h3>🏆 Candidato com mais votos: {vencedor['Candidato']}</h3>
-                    <p style='font-size: 24px; font-weight: bold;'>{vencedor['Total de Votos']} votos</p>
-                </div>
-                """, unsafe_allow_html=True)
-    else:
-        st.info("Ainda não há votos registrados.")
-        
-except Exception as e:
-    st.error(f"Erro ao carregar totalização: {e}")
-
-# ======== BOTÃO PARA ATUALIZAR ========
-st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
-if st.button("🔄 Atualizar Resultados"):
-    st.rerun()
-
+# A totalização é atualizada automaticamente na planilha após cada voto
+# mas não é exibida no app para manter o sigilo até o encerramento da votação
